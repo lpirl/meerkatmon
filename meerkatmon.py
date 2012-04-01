@@ -9,9 +9,9 @@ class MeerkatMon(CommandLineApp):
 
 	def main(self):
 		print "running"
-		self.load_config(self)
-		self.collect_strategies(self)
-		self.run_strategies(self)
+		self.load_config()
+		self.collect_strategies()
+		self.run_strategies()
 
 	def load_config(self):
 		pass
@@ -60,4 +60,3 @@ if __name__ == "__main__":
 
 	import strategies
 	print dir(strategies)
-	s2 = strategies.ping.Ping("8.8.8.8")
