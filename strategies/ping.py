@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from meerkatmon import Strategy
+from meerkatmon import Strategy, KNOWLEDGE_EXISTS, KNOWLEDGE_NONE
 
 class Ping(Strategy):
 
 	def target_knowledge(self):
 		if self.target.netloc:
-			return 1
-		return 0
+			return KNOWLEDGE_EXISTS
+		return KNOWLEDGE_NONE
