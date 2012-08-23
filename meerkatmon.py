@@ -1,20 +1,42 @@
 #!/usr/bin/env python
 from urlparse import urlparse, ParseResult
-from cli.app import CommandLineApp
+# from cli.app import CommandLineApp
 
-class MeerkatMon(CommandLineApp):
+class MeerkatMon(): #CommandLineApp):
 
 	strategies = list()
 	config = dict()
 
 	def main(self):
-		print "running"
 		self.load_config()
 		self.collect_strategies()
 		self.run_strategies()
 
 	def load_config(self):
-		pass
+		"""
+		Method loads configuration from file into dicts.
+		"""
+		fp = open("./meerkatmon.conf", "r")
+		config = dict()
+		options = dict()
+		for line in fp.readlines():
+			line = line.strip()
+
+			if line.startswith("#"):
+				continue
+
+			if line.startswith('[') and line.endswith(']'):
+				options = dict()
+				config[line[1:-1]] = options
+				continue
+
+			if '=' in line:
+				key, value = tuple(line.split("=", 1))
+				options[key.strip()] = value.strip()
+				continue
+
+		fp.close()
+		self.config = config
 
 	def collect_strategies(self):
 		pass
@@ -71,5 +93,3 @@ if __name__ == "__main__":
 	monitor = MeerkatMon()
 	monitor.main()
 
-	import strategies
-	print dir(strategies)
