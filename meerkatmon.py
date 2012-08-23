@@ -25,6 +25,13 @@ class MeerkatMon(CommandLineApp):
 			strategy.do_check()
 			strategy.teardown()
 
+
+KNOWLEDGE_NONE = 0
+KNOWLEDGE_EXISTS = 10
+KNOWLEDGE_ALIVE = 20
+KNOWLEDGE_WORKS = 30
+KNOWLEDGE_FULL = 100
+
 class Strategy:
 	target = None
 
@@ -44,10 +51,16 @@ class Strategy:
 		This method is used to ask a strategy for its knowledge about a target (how well it can determine it's availability).
 
 		The return value should be
-			0: I cannot check this target
-			1: I can tell you if the target is there
-			2: I can tell you all above and if it is working
-			3: I can tell you all above and do sophisticated checks
+			KNOWLEDGE_NONE:		I cannot check this target
+			KNOWLEDGE_EXISTS:	I can tell you if the target exists
+								(ex: ping)
+			KNOWLEDGE_ALIVE:	Aditionally, I can tell if target is
+								alive (ex HTTP return code 200)
+			KNOWLEDGE_WORKS:	Aditionally, I can tell you if the target
+								works as expected
+								(ex: delivers expected HTML)
+			KNOWLEDGE_FULL		I check the whole fuctionality of the
+								target
 
 		The return values of all strategies will be used to determine
 		the best strategy for each target.
