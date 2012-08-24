@@ -2,9 +2,8 @@
 from urlparse import urlparse, ParseResult
 from inspect import getmembers, isclass
 import strategies as strategies_module
-# from cli.app import CommandLineApp
 
-class MeerkatMon(): #CommandLineApp):
+class MeerkatMon():
 
 	default_config_filename = "./meerkatmon.conf"
 	strategies = list()
