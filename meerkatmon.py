@@ -5,9 +5,9 @@ import strategies as strategies_module
 
 class MeerkatMon():
 
-	default_config_filename = "./meerkatmon.conf"
-	strategies = list()
-	config = dict()
+	default_configs_filename = "./meerkatmon.conf"
+	configs = dict()
+	global_config = dict()
 
 	default_config = {
 		'target': '',
@@ -22,19 +22,19 @@ class MeerkatMon():
 
 	def auto(self):
 		self.debug("started in auto mode")
-		self.load_config()
-		self.collect_strategies()
-		self.assign_strategies()
+		self.load_configs()
+		self.preprocess_configs()
+		#self.assign_strategies()
 		self.test_targets()
 
-	def load_config(self, filename = None):
+	def load_configs(self, filename = None):
 		"""
 		Method loads configuration from file into dicts.
 		"""
-		filename = filename or self.default_config_filename
+		filename = filename or self.default_configs_filename
 		self.debug("loading configuration from '%s'" % filename)
 		fp = open(filename, "r")
-		config = dict()
+		configs = dict()
 		options = dict()
 		for line in fp.readlines():
 			line = line.strip()
@@ -44,7 +44,7 @@ class MeerkatMon():
 
 			if line.startswith('[') and line.endswith(']'):
 				options = dict()
-				config[line[1:-1]] = options
+				configs[line[1:-1]] = options
 				continue
 
 			if '=' in line:
@@ -53,41 +53,66 @@ class MeerkatMon():
 				continue
 
 		fp.close()
-		self.debug("configuration is: '%s'" % unicode(config))
-		self.config = self.parse_targets(config)
+		self.debug("configuration is: '%s'" % unicode(configs))
 
-	def parse_targets(self, config):
+		global_config = configs.get('global', self.default_config)
+		configs.pop('global', None)
+
+		self.configs = configs
+
+	def preprocess_configs(self):
 		"""
-		Tries to trnasform "target"s from config into ParseResults.
+		Method prepares every service in configs for monitoring.
+		"""
+		for section, options in self.configs.iteritems():
+			self.debug("processing service '%s'" % section)
+			options = self.parse_target(section, options)
+			options = self.assign_strategy(section, options)
+
+	def parse_target(self, section, options):
+		"""
+		Tries to trnasform a "target" into ParseResults.
 		Raises if not possible.
 		"""
-		for section, options in config.iteritems():
+		target_str = options['target']
+		self.debug("  parsing target '%s'" % target_str)
 
-			if section == "global":
-				continue
+		if "//" not in target_str:
+			target_str = "//" + target_str
 
-			target_str = options['target']
-			self.debug("parsing target for %s (%s)" % (section, target_str))
+		parsed_target = urlparse(target_str)
+		options['parsed_target'] = parsed_target
+		self.debug("    " + str(parsed_target))
 
-			if "//" not in target_str:
-				target_str = "//" + target_str
+		return options
 
-			parsed_target = urlparse(target_str)
-			options['parsed_target'] = parsed_target
-			self.debug("	" + str(parsed_target))
-
-		return config
-
-	def collect_strategies(self):
+	def get_strategies(self):
 		"""
 		Acquires all strategies (classes) in the module 'strategies'.
 		"""
-		self.strategies = [	t[1] for t in
-							getmembers(strategies_module, isclass) ]
-		self.debug("found stategies: %s" % unicode(self.strategies))
+		if not getattr(self, '_strategies', None):
+			self._strategies = [	t[1] for t in
+									getmembers(strategies_module, isclass) ]
+			self.debug("found stategies: %s" % unicode(self._strategies))
+		return self._strategies
 
-	def assign_strategies(self):
-		pass
+	def assign_strategy(self, section, options):
+		"""
+		Rates all strategies for all targets and selects the best one.
+		"""
+		self.debug("  Searching strategy")
+		best_strategy = (None, KNOWLEDGE_NONE)
+		for strategy in self.get_strategies():
+			strategy_for_target = 	strategy(
+										options['parsed_target'],
+										options
+									)
+			knowledge = strategy_for_target.target_knowledge()
+			if knowledge > best_strategy[1]:
+				best_strategy = (strategy_for_target, knowledge)
+		self.debug("    found '%s'" % strategy.__name__)
+
+		return options
 
 	def test_targets(self):
 		# TODO
@@ -102,7 +127,7 @@ KNOWLEDGE_FULL = 100
 class Strategy:
 	target = None
 
-	def __init__(self, target, config=None):
+	def __init__(self, target, configs=None):
 		if not isinstance(target, ParseResult):
 			TypeError(
 				"A Strategy must be initialized with an urlparse.ParseResult"
