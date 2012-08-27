@@ -31,6 +31,34 @@ class Ping(Strategy):
 		except CalledProcessError, e:
 			success = False
 			output = e.output
-		output = ''.join([COLOR_LIGHT, output.strip(), COLOR_STD])
 
-		debug("  had %ssuccess '%s'" % ('NO ' if not success else '', output))
+		self.output = output.strip()
+		self.success = success
+
+		debug("  had %ssuccess \n\n'%s'\n" % (
+			'NO ' if not self.success else '',
+			''.join([COLOR_LIGHT, output, COLOR_STD])
+		))
+
+	def get_mail_message(self):
+		return '\nS'.join([
+			self.get_mail_subject(),
+			"",
+			"========== Output ==========",
+			self.output,
+			"============================"
+		])
+
+	def get_mail_subject(self):
+		return "%s pinging '%s'!" % (
+			'Success' if self.success else 'Error',
+			self.target.netloc
+		)
+
+	def get_last_check_success(self):
+		try:
+			return self.success
+		except AttributeError:
+			raise RuntimeError(
+				"strategy asked for success prior callind do_check()"
+			)

@@ -2,6 +2,8 @@
 from urlparse import urlparse, ParseResult
 from inspect import getmembers, isclass
 import strategies as strategies_module
+from smtplib import SMTP
+from email.mime.text import MIMEText
 
 COLOR_STD='\033[0m'
 COLOR_FAIL='\033[31m'
@@ -9,32 +11,38 @@ COLOR_LIGHT='\033[33m'
 
 
 def debug(msg):
-	# TODO: go *args, **kwargs
 	if __debug__:
 		print(msg)
 
 class MeerkatMon():
 
-	default_configs_filename = "./meerkatmon.conf"
-	configs = dict()
-	global_config = dict()
+	# TODO: we should detect the hostname and add a possibility to
+	# override it in the config
 
-	default_global_config = {
-		'target': '',
+	default_configs_filename = "./meerkatmon.conf"
+
+	configs = dict()
+
+	default_configs = {
 		'timeout': '10',
 		'admin': 'root@localhost',
-		'mail_success': 'True',
+		'mail_success': False,
+	}
+
+	global_configs = {
+		'mail_together': 'False',
+		'mail_from': 'meerkatmon',
 	}
 
 	def auto(self):
 		debug("started in auto mode")
 		self.load_configs()
-		self.preprocess_configs()
 		self.test_targets()
+		self.mail_results()
 
-	def load_configs(self, filename = None):
+	def config_file_to_dict(self, filename = None):
 		"""
-		Method loads configuration from file into dicts.
+		Method loads configuration from file into dict.
 		"""
 		filename = filename or self.default_configs_filename
 		debug("loading configuration from '%s'" % filename)
@@ -49,7 +57,7 @@ class MeerkatMon():
 
 			if line.startswith('[') and line.endswith(']'):
 				options = dict()
-				configs[line[1:-1]] = options
+				configs[line[1:-1].strip()] = options
 				continue
 
 			if '=' in line:
@@ -60,28 +68,63 @@ class MeerkatMon():
 		fp.close()
 		debug("configuration is: '%s'" % unicode(configs))
 
-		global_config = configs.get('global', dict())
-		configs.pop('global', None)
-		global_config.update(self.default_global_config)
+		return configs
 
-		self.global_config = global_config
+	def load_configs(self, filename = None):
+		"""
+		Coordinates loading of config.
+		Seperates speciel sections.
+		"""
+		configs = self.config_file_to_dict(filename)
+		configs = self.preprocess_configs(configs)
+
+		self.global_configs.update(
+			configs.pop('global', dict())
+		)
+
+		self.default_configs.update(
+			configs.pop('default', dict())
+		)
+
 		self.configs = configs
 
-	def preprocess_configs(self):
+	def preprocess_configs(self, configs):
 		"""
-		Method prepares every service in configs for monitoring.
+		Method prepares every service in configs for running the tests.
+		This may happen only once during runtime (config remains in memory).
 		"""
-		for section, options in self.configs.iteritems():
+		for section, options in configs.iteritems():
 			debug("processing service '%s'" % section)
-			options = self.parse_target(section, options)
-			options = self.assign_strategy(section, options)
+			options = self.convert_types(section, options)
+			if section not in ['default', 'global']:
+				options = self.apply_defaults(section, options)
+				options = self.parse_target(section, options)
+				options = self.assign_strategy(section, options)
+			configs[section] = options
+		return configs
+
+	def apply_defaults(self, section, options):
+		"""
+		Applies default configs to section.
+		"""
+		full_options = dict(self.default_configs)
+		full_options.update(options)
+		return full_options
 
 	def parse_target(self, section, options):
 		"""
-		Tries to trnasform a "target" into ParseResults.
+		Tries to transform a "target" into ParseResulparse_booleansparse_booleansparse_booleansts.
 		Raises if not possible.
 		"""
-		target_str = options['target']
+
+		try:
+			target_str = options['target']
+		except KeyError:
+			raise KeyError(
+				"Section '%s' has no target. " % section +
+				"We won't ignore this error since it is an obvious " +
+				"misconfiguration"
+			)
 		debug("  parsing target '%s'" % target_str)
 
 		if "//" not in target_str:
@@ -100,7 +143,9 @@ class MeerkatMon():
 		if not getattr(self, '_strategies', None):
 			self._strategies = [	t[1] for t in
 									getmembers(strategies_module, isclass) ]
-			debug("found stategies: %s" % unicode(self._strategies))
+			debug("found stategies: %s" % unicode(
+				[s.__name__ for s in self._strategies]
+			))
 		return self._strategies
 
 	def assign_strategy(self, section, options):
@@ -118,15 +163,103 @@ class MeerkatMon():
 			if knowledge > best_strategy[1]:
 				best_strategy = (strategy_for_target, knowledge)
 
-		debug("    found '%s'" % strategy.__name__)
+		debug("    choosen '%s'" % strategy.__name__)
 		options['strategy'] = best_strategy[0]
 
 		return options
 
+	def convert_types(self, section, options):
+		"""
+		Parses types from values from options.
+		"""
+
+		for key, value in options.iteritems():
+			if key in ['mail_success', 'mail_together']:
+				options[key] = bool(value)
+
+		return options
+
 	def test_targets(self):
+		"""
+		Method simply runs tests for every section.
+		"""
 		for section, options in self.configs.iteritems():
 			debug("do check for %s" % section)
-			result = options['strategy'].do_check()
+			options['strategy'].do_check()
+
+	def mail_results(self):
+		"""
+		Method is responsible for informing the cerresponding admin
+		about errors and success (if desired).
+		"""
+		results = dict()
+		for section, options in self.configs.iteritems():
+			strategy = options['strategy']
+
+			if not options['mail_success'] and strategy.get_last_check_success():
+				continue
+
+			results[section] = {
+				'message': strategy.get_mail_message(),
+				'subject': strategy.get_mail_subject()
+			}
+
+		if self.global_configs['mail_together']:
+			self.mail_results_together(results)
+		else:
+			self.mail_results_separate(results)
+
+	def mail_results_together(self, results):
+		"""
+		Method mails test results all together to global admin.
+		"""
+		mail_from = self.global_configs['mail_from']
+		admin = self.default_configs['admin']
+		subject = 'mail together subject'
+		message = '\n\n=============================\n\n'.join([
+			r['message'] for r in results.values()
+		])
+		if not message:
+			debug("Mailing together. Nothing to do.")
+			return
+		srsm_tuple = (mail_from, admin, subject, message)
+		debug("Mailing together. Collected %s" % str(srsm_tuple))
+		self.send_mails([srsm_tuple])
+
+	def mail_results_separate(self, results):
+		"""
+		Method mails test results all together to admin specified in
+		corresponding section or global admin if absent.
+		"""
+		srsm_tuples = list()
+		mail_from = self.global_configs['mail_from']
+		for section, result in results.iteritems():
+			admin = self.configs[section]['admin']
+			subject = result['subject']
+			message = result['message']
+			srsm_tuples.append((
+				(mail_from, admin, subject, message)
+			))
+		debug("mailing separate. Collected %s" % str(srsm_tuples))
+		self.send_mails(srsm_tuples)
+
+	def send_mails(self, sender_recipient_subject_message_tuples=None):
+		"""
+		Method actually does send an email.
+		"""
+		if not sender_recipient_subject_message_tuples:
+			return
+
+		s = SMTP('localhost')
+		for srsm in sender_recipient_subject_message_tuples:
+			msg = MIMEText(srsm[3])
+			msg['From'] = srsm[0]
+			msg['To'] = srsm[1]
+			msg['Subject'] = srsm[2]
+			deubug("sending %s" % str(msg))
+			s.sendmail(srsm[0], [srsm[1]], msg.as_string())
+		s.quit()
+
 
 KNOWLEDGE_NONE = 0
 KNOWLEDGE_EXISTS = 10
@@ -145,11 +278,14 @@ class Strategy:
 		self.target = target
 		self.options = options or dict()
 
-	def setup(self):
-		pass
+	def _raise_subclass_error(self, method_name):
+		raise NotImplementedError(
+			"Subclass %s must provide method %s()" % (
+				self.__class__,
+				method_name
+			)
+		)
 
-	def teardown(self):
-		pass
 
 	def target_knowledge(self):
 		"""
@@ -170,19 +306,34 @@ class Strategy:
 		The return values of all strategies will be used to determine
 		the best strategy for each target.
 		"""
-		raise NotImplementedError(
-			"Subclass %s must provide target_knowledge()" % self.__class__
-		)
+		self._raise_subclass_error('target_knowledge')
 
 	def do_check(self):
 		"""
 		Method that actually runs the checks.
 		"""
-		raise NotImplementedError(
-			"Subclass %s must provide do_check()" % self.__class__
-		)
+		self._raise_subclass_error('do_check')
 
-	# TODO: add get_mail_body(), get_mail_subject()
+	def get_mail_message(self):
+		"""
+		Returns the body containing all relevant information about
+		the error/sucess.
+		"""
+		self._raise_subclass_error('get_mail_message')
+
+	def get_mail_subject(self):
+		"""
+		Returns a shprt, meaningful summary of the error/success.
+		This may be not queried! (Thus should not provide information
+		not in message)
+		"""
+		self._raise_subclass_error('get_mail_subject')
+
+	def get_last_check_success(self):
+		"""
+		Returns Boolean if last check was successful
+		"""
+		self._raise_subclass_error('get_last_check_success()')
 
 if __name__ == "__main__":
 	monitor = MeerkatMon()
