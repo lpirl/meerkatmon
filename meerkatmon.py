@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-from urlparse import urlparse, ParseResult
+#!/usr/bin/env python3
+from urllib.parse import urlparse, ParseResult
 from inspect import getmembers, isclass
 import strategies as strategies_module
 from smtplib import SMTP
@@ -66,7 +66,7 @@ class MeerkatMon():
 				continue
 
 		fp.close()
-		debug("configuration is: '%s'" % unicode(configs))
+		debug("configuration is: '%s'" % str(configs))
 
 		return configs
 
@@ -93,7 +93,7 @@ class MeerkatMon():
 		Method prepares every service in configs for running the tests.
 		This may happen only once during runtime (config remains in memory).
 		"""
-		for section, options in configs.iteritems():
+		for section, options in configs.items():
 			debug("processing service '%s'" % section)
 			options = self.convert_types(section, options)
 			if section not in ['default', 'global']:
@@ -143,7 +143,7 @@ class MeerkatMon():
 		if not getattr(self, '_strategies', None):
 			self._strategies = [	t[1] for t in
 									getmembers(strategies_module, isclass) ]
-			debug("found stategies: %s" % unicode(
+			debug("found stategies: %s" % str(
 				[s.__name__ for s in self._strategies]
 			))
 		return self._strategies
@@ -173,7 +173,7 @@ class MeerkatMon():
 		Parses types from values from options.
 		"""
 
-		for key, value in options.iteritems():
+		for key, value in options.items():
 			if key in ['mail_success', 'mail_together']:
 				options[key] = bool(value)
 
@@ -183,7 +183,7 @@ class MeerkatMon():
 		"""
 		Method simply runs tests for every section.
 		"""
-		for section, options in self.configs.iteritems():
+		for section, options in self.configs.items():
 			debug("do check for %s" % section)
 			options['strategy'].do_check()
 
@@ -193,7 +193,7 @@ class MeerkatMon():
 		about errors and success (if desired).
 		"""
 		results = dict()
-		for section, options in self.configs.iteritems():
+		for section, options in self.configs.items():
 			strategy = options['strategy']
 
 			if not options['mail_success'] and strategy.get_last_check_success():
@@ -217,7 +217,7 @@ class MeerkatMon():
 		admin = self.default_configs['admin']
 		subject = 'mail together subject'
 		message = '\n\n=============================\n\n'.join([
-			r['message'] for r in results.values()
+			r['message'] for r in list(results.values())
 		])
 		if not message:
 			debug("Mailing together. Nothing to do.")
@@ -233,7 +233,7 @@ class MeerkatMon():
 		"""
 		srsm_tuples = list()
 		mail_from = self.global_configs['mail_from']
-		for section, result in results.iteritems():
+		for section, result in results.items():
 			admin = self.configs[section]['admin']
 			subject = result['subject']
 			message = result['message']

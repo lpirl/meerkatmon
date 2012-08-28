@@ -23,25 +23,25 @@ class Ping(Strategy):
 			self.target.netloc
 		]
 
-		debug("running command: %s" % unicode(cmd))
+		debug("running command: %s" % str(cmd))
 
 		success = True
 		try:
 			output = check_output(cmd, stderr=STDOUT)
-		except CalledProcessError, e:
+		except CalledProcessError as e:
 			success = False
 			output = e.output
 
-		self.output = output.strip()
+		self.output = output.decode().strip()
 		self.success = success
 
 		debug("  had %ssuccess \n\n'%s'\n" % (
 			'NO ' if not self.success else '',
-			''.join([COLOR_LIGHT, output, COLOR_STD])
+			''.join([COLOR_LIGHT, self.output, COLOR_STD])
 		))
 
 	def get_mail_message(self):
-		return '\nS'.join([
+		return '\n'.join([
 			self.get_mail_subject(),
 			"",
 			"========== Output ==========",
