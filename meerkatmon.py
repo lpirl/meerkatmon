@@ -16,9 +16,6 @@ def debug(msg):
 
 class MeerkatMon():
 
-	# TODO: we should detect the hostname and add a possibility to
-	# override it in the config
-
 	default_configs_filename = "./meerkatmon.conf"
 
 	configs = dict()
@@ -35,6 +32,10 @@ class MeerkatMon():
 	}
 
 	def auto(self):
+		"""
+		Run all actions in the correct order to read config and
+		check all targets.
+		"""
 		debug("started in auto mode")
 		self.load_configs()
 		self.test_targets()
@@ -42,7 +43,7 @@ class MeerkatMon():
 
 	def config_file_to_dict(self, filename = None):
 		"""
-		Method loads configuration from file into dict.
+		Method loads configuration from file into dictionary.
 		"""
 		filename = filename or self.default_configs_filename
 		debug("loading configuration from '%s'" % filename)
@@ -113,7 +114,7 @@ class MeerkatMon():
 
 	def parse_target(self, section, options):
 		"""
-		Tries to transform a "target" into ParseResulparse_booleansparse_booleansparse_booleansts.
+		Tries to transform a "target" into ParseResults.
 		Raises if not possible.
 		"""
 
