@@ -44,9 +44,9 @@ class Ping(Strategy):
 		return '\n'.join([
 			self.get_mail_subject(),
 			"",
-			"========== Output ==========",
+			" Output ".center(30, '-'),
 			self.output,
-			"============================"
+			"".center(30, '-')
 		])
 
 	def get_mail_subject(self):

@@ -215,8 +215,9 @@ class MeerkatMon():
 		"""
 		mail_from = self.global_configs['mail_from']
 		admin = self.default_configs['admin']
-		subject = 'mail together subject'
-		message = '\n\n=============================\n\n'.join([
+		subject = 'Output from checking ' + ', '.join(list(results.keys()))
+		delim = "\n\n%s\n\n" % ("="*80)
+		message = delim.join([
 			r['message'] for r in list(results.values())
 		])
 		if not message:
@@ -256,7 +257,7 @@ class MeerkatMon():
 			msg['From'] = srsm[0]
 			msg['To'] = srsm[1]
 			msg['Subject'] = srsm[2]
-			deubug("sending %s" % str(msg))
+			debug("sending %s" % str(msg))
 			s.sendmail(srsm[0], [srsm[1]], msg.as_string())
 		s.quit()
 
