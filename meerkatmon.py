@@ -74,7 +74,7 @@ class MeerkatMon():
 	def load_configs(self, filename = None):
 		"""
 		Coordinates loading of config.
-		Seperates speciel sections.
+		Seperates special sections.
 		"""
 		configs = self.config_file_to_dict(filename)
 		configs = self.preprocess_configs(configs)
@@ -92,7 +92,6 @@ class MeerkatMon():
 	def preprocess_configs(self, configs):
 		"""
 		Method prepares every service in configs for running the tests.
-		This may happen only once during runtime (config remains in memory).
 		"""
 		for section, options in configs.items():
 			debug("processing service '%s'" % section)
@@ -114,7 +113,7 @@ class MeerkatMon():
 
 	def parse_target(self, section, options):
 		"""
-		Tries to transform a "target" into ParseResults.
+		Tries to transform a "target" into a ParseResults.
 		Raises if not possible.
 		"""
 
