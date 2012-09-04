@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+
+from os.path import dirname, join as path_join
+import sys
 from urllib.parse import urlparse, ParseResult
 from inspect import getmembers, isclass
-import strategies as strategies_module
 from smtplib import SMTP
 from email.mime.text import MIMEText
+
+import strategies as strategies_module
 
 COLOR_STD='\033[0m'
 COLOR_FAIL='\033[31m'
@@ -16,7 +20,10 @@ def debug(msg):
 
 class MeerkatMon():
 
-	default_configs_filename = "./meerkatmon.conf"
+	default_configs_filename = path_join(
+		dirname(sys.argv[0]),
+		"meerkatmon.conf"
+	)
 
 	configs = dict()
 
