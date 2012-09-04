@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from os.path import dirname, join as path_join
-import sys
+from sys import argv
+from os import access, environ, pathsep, X_OK
+from os.path import isfile, join as path_join, dirname
 from urllib.parse import urlparse, ParseResult
 from inspect import getmembers, isclass
 from smtplib import SMTP
@@ -21,7 +22,7 @@ def debug(msg):
 class MeerkatMon():
 
 	default_configs_filename = path_join(
-		dirname(sys.argv[0]),
+		dirname(argv[0]),
 		"meerkatmon.conf"
 	)
 
@@ -294,10 +295,28 @@ class Strategy:
 			)
 		)
 
+	def which(self, search_program):
+		"""
+		Helps finding a binary.
+		Takes binary name and returns full path to it.
+		Inspired by http://stackoverflow.com/a/377028
+		"""
+		is_exec = lambda x: isfile(x) and access(x, X_OK)
+
+		if dirname(search_program) and is_exe(search_program):
+			return search_program
+
+		for path in environ["PATH"].split(pathsep):
+			exec_file = path_join(path, search_program)
+			if is_exec(exec_file):
+				return exec_file
+
+		return None
 
 	def target_knowledge(self):
 		"""
-		This method is used to ask a strategy for its knowledge about a target (how well it can determine it's availability).
+		This method is used to ask a strategy for its knowledge about a
+		target (how well it can determine it's availability).
 
 		The return value should be
 			KNOWLEDGE_NONE:		I cannot check this target

@@ -17,7 +17,7 @@ class Ping(Strategy):
 
 	def do_check(self):
 		cmd = [
-			'/bin/ping',
+			self.which('ping'),
 			'-W', self.options.get('timeout', '5'),
 			'-c', self.options.get('count', '1'),
 			self.target.netloc
