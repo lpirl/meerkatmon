@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from urllib.request import urlopen
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from meerkatmon import (	Strategy,
 							debug,
 							KNOWLEDGE_ALIVE,
@@ -17,15 +17,20 @@ class Http(Strategy):
 
 	def do_check(self):
 		try:
-			response = urlopen(
-				self.target.geturl(),
-				timeout = int(self.options.get('timeout', '5'))
-			)
-		except HTTPError as e:
-			response = e
+			try:
+				response = urlopen(
+					self.target.geturl(),
+					timeout = int(self.options.get('timeout', '5'))
+				)
+			except HTTPError as e:
+				response = e
 
-		self.output = response.msg
-		self.success = response.code == 200
+			self.output = response.msg
+			self.success = response.code == 200
+
+		except URLError as e:
+			self.success = False
+			self.output = str(e.reason)
 
 		debug("  had %ssuccess \n\n'%s'\n" % (
 			'NO ' if not self.success else '',
