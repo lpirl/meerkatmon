@@ -10,8 +10,8 @@ This should lead to an email in your inbox:
 
 	echo "foo" | sendmail -t your_mail_address@example.com
 
-If you *have* installed and configured services (to be monitored),
-this is a cakewalk:
+Good news: if you *have* installed and configured services
+(to be monitored), this installation will be a cakewalk:
 
 	cd /your/desired/location/
 	git clone git://github.com/lpirl/meerkatmon.git
@@ -27,10 +27,8 @@ Then, add for example
 
 	*/23 * * * * /usr/bin/python3 -O /your/desired/location/meerkatmon/meerkatmon.py
 
-to check all services every 23 minutes to your crontab using `crontab -e`,
-preferably *NOT* as root.
-
-	crontab -e
+to your crontab using `crontab -e` (preferably *NOT* as root)
+to check all services every 23 minutes.
 
 Done.
 
