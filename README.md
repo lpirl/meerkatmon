@@ -5,7 +5,34 @@ kinds of services.
 
 ## Installation
 
-TODO
+First, make sure your server can send mails.
+This should lead to an email in your inbox:
+
+	echo "foo" | sendmail -t your_mail_address@example.com
+
+If you *have* installed and configured services (to be monitored),
+this is a cakewalk:
+
+	cd /your/desired/location/
+	git clone git://github.com/lpirl/meerkatmon.git
+	cd meerkatmon
+	nano meerkatmon.conf
+
+Add all services to be monitored, exit the editor
+and - optionally - check if everything works as expected:
+
+	./meerkatmon.py
+
+Then, add for example
+
+	*/23 * * * * /usr/bin/python3 -O /your/desired/location/meerkatmon/meerkatmon.py
+
+to check all services every 23 minutes to your crontab using `crontab -e`,
+preferably *NOT* as root.
+
+	crontab -e
+
+Done.
 
 ## Simplicity
 
