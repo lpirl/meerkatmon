@@ -37,6 +37,7 @@ class MeerkatMon():
 	global_configs = {
 		'mail_together': 'False',
 		'mail_from': 'meerkatmon',
+		'tmp_directory': '/tmp/meerkatmon'
 	}
 
 	def auto(self):
@@ -161,11 +162,12 @@ class MeerkatMon():
 		Rates all strategies for all targets and selects the best one.
 		"""
 		debug("  Searching strategy")
+		global_configs = self.global_configs
 		best_strategy = (None, KNOWLEDGE_NONE)
 		for strategy in self.get_strategies():
 			strategy_for_target = 	strategy(
-										options['parsed_target'],
-										options
+										global_configs,
+										options,
 									)
 			knowledge = strategy_for_target.target_knowledge()
 			if knowledge > best_strategy[1]:
@@ -273,19 +275,22 @@ class MeerkatMon():
 KNOWLEDGE_NONE = 0
 KNOWLEDGE_EXISTS = 10
 KNOWLEDGE_ALIVE = 20
-KNOWLEDGE_WORKS = 30
+KNOWLEDGE_NOTICE = 40
+KNOWLEDGE_WORKS = 50
 KNOWLEDGE_FULL = 100
 
 class Strategy:
 	target = None
 
-	def __init__(self, target, options=None):
+	def __init__(self, global_options, options):
+		target = options['parsed_target']
 		if not isinstance(target, ParseResult):
 			TypeError(
 				"A Strategy must be initialized with an urlparse.ParseResult"
 			)
+		self.global_options = global_options
+		self.options = options
 		self.target = target
-		self.options = options or dict()
 
 	def _raise_subclass_error(self, method_name):
 		raise NotImplementedError(
@@ -303,7 +308,7 @@ class Strategy:
 		"""
 		is_exec = lambda x: isfile(x) and access(x, X_OK)
 
-		if dirname(search_program) and is_exe(search_program):
+		if dirname(search_program) and is_exec(search_program):
 			return search_program
 
 		for path in environ["PATH"].split(pathsep):
@@ -324,6 +329,8 @@ class Strategy:
 								(ex: ping)
 			KNOWLEDGE_ALIVE:	Aditionally, I can tell if target is
 								alive (ex HTTP return code 200)
+			KNOWLEDGE_NOTICE:	Aditionally, I can tell you if the target
+								behaves similar to the last check.
 			KNOWLEDGE_WORKS:	Aditionally, I can tell you if the target
 								works as expected
 								(ex: delivers expected HTML)
