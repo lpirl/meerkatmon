@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 from subprocess import check_output, CalledProcessError, STDOUT
 
-from meerkatmon import (	Strategy,
+from meerkatmon import (	BaseStrategy,
 							debug,
 							KNOWLEDGE_EXISTS,
 							KNOWLEDGE_NONE,
 							COLOR_LIGHT,
 							COLOR_STD )
 
-class Ping(Strategy):
+class Ping(BaseStrategy):
 
 	def target_knowledge(self):
 		if self.target.netloc:

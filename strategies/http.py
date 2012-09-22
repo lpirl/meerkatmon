@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
-from meerkatmon import (	Strategy,
+from meerkatmon import (	BaseStrategy,
 							debug,
 							KNOWLEDGE_ALIVE,
 							KNOWLEDGE_NONE,
 							COLOR_LIGHT,
 							COLOR_STD )
 
-class Http(Strategy):
+class Http(BaseStrategy):
 
 	def target_knowledge(self):
 		if self.target.scheme.lower() in ("http", "https", ):

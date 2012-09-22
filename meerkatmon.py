@@ -279,7 +279,7 @@ KNOWLEDGE_NOTICE = 40
 KNOWLEDGE_WORKS = 50
 KNOWLEDGE_FULL = 100
 
-class Strategy:
+class BaseStrategy:
 	target = None
 
 	def __init__(self, global_options, options):
