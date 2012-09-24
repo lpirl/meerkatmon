@@ -68,27 +68,23 @@ class Http(BaseStrategy):
 	def compare_responses(self, response1, response2):
 
 		try:
-			max_distance = float(
-				self.options.get('max_distance', None)
+			max_deviation = float(
+				self.options.get('max_size_deviation_percentage', None)
 			)
 		except TypeError as e:
 			return
 
-		response1 = str(response1)
-		response2 = str(response2)
-		for junk_character in [' ', '\t']:
-			response1 = response1.replace(junk_character, '')
-			response2 = response2.replace(junk_character, '')
-
-		distance = 0 # implementation needed
-
-		additional_message = "Deviation ratio %f (max %f)" % (
-			distance, max_distance
+		if len(response2):
+			deviation = abs((100 * len(response1) / len(response2)) - 100 )
+		else:
+			deviation = 100
+		additional_message = "Deviation in size %f%% (max %f%%)" % (
+			deviation, max_deviation
 		)
 
 		debug("  " + additional_message)
 
-		self.success = distance > max_distance
+		self.success = deviation <= max_deviation
 		self.message += "\n\n" + additional_message
 
 	def get_mail_message(self):

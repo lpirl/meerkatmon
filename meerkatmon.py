@@ -230,7 +230,7 @@ class MeerkatMon():
 		subject = 'Output from checking ' + ', '.join(list(results.keys()))
 		delim = "\n\n%s\n\n" % ("="*80)
 		message = delim.join((
-			''.join(("=== ", r['subject'], " ===\n", r['message']))
+			''.join(("--- ", r['subject'], " ---\n", r['message']))
 			for r in list(results.values())
 		))
 		if not message:
