@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 from sys import argv
-from os import access, environ, pathsep, X_OK
-from os.path import isfile, join as path_join, dirname
+import stat
+from os import (	access, environ, pathsep, X_OK, sep, getlogin,
+					chmod, makedirs )
+from os.path import isfile, join as path_join, dirname, isdir
 from urllib.parse import urlparse, ParseResult
 from inspect import getmembers, isclass
 from smtplib import SMTP
@@ -13,7 +15,6 @@ import strategies as strategies_module
 COLOR_STD='\033[0m'
 COLOR_FAIL='\033[31m'
 COLOR_LIGHT='\033[33m'
-
 
 def debug(msg):
 	if __debug__:
@@ -167,6 +168,7 @@ class MeerkatMon():
 		for strategy in self.get_strategies():
 			strategy_for_target = 	strategy(
 										global_configs,
+										section,
 										options,
 									)
 			knowledge = strategy_for_target.target_knowledge()
@@ -227,9 +229,10 @@ class MeerkatMon():
 		admin = self.default_configs['admin']
 		subject = 'Output from checking ' + ', '.join(list(results.keys()))
 		delim = "\n\n%s\n\n" % ("="*80)
-		message = delim.join([
-			r['message'] for r in list(results.values())
-		])
+		message = delim.join((
+			''.join(("=== ", r['subject'], " ===\n", r['message']))
+			for r in list(results.values())
+		))
 		if not message:
 			debug("Mailing together. Nothing to do.")
 			return
@@ -282,15 +285,17 @@ KNOWLEDGE_FULL = 100
 class BaseStrategy:
 	target = None
 
-	def __init__(self, global_options, options):
+	def __init__(self, global_options, section, options):
 		target = options['parsed_target']
 		if not isinstance(target, ParseResult):
 			TypeError(
 				"A Strategy must be initialized with an urlparse.ParseResult"
 			)
 		self.global_options = global_options
+		self.section = section
 		self.options = options
 		self.target = target
+
 
 	def _raise_subclass_error(self, method_name):
 		raise NotImplementedError(
@@ -350,16 +355,16 @@ class BaseStrategy:
 
 	def get_mail_message(self):
 		"""
-		Returns the body containing all relevant information about
-		the error/sucess.
+		Returns the subject and body containing *all* relevant
+		information about the error/sucess.
+		Will never be mailed w/o information from get_mail_subject.
 		"""
 		self._raise_subclass_error('get_mail_message')
 
 	def get_mail_subject(self):
 		"""
-		Returns a shprt, meaningful summary of the error/success.
-		This may be not queried! (Thus should not provide information
-		not in message)
+		Returns a short, meaningful summary of the error/success.
+		Will never be mailed w/o information from get_mail_message.
 		"""
 		self._raise_subclass_error('get_mail_subject')
 
@@ -368,6 +373,46 @@ class BaseStrategy:
 		Returns Boolean if last check was successful
 		"""
 		self._raise_subclass_error('get_last_check_success()')
+
+	def get_sample_filename(self):
+		"""
+		Returns the file name where the state is saved in.
+		"""
+		file_name = "__".join((
+			getlogin(),
+			self.section,
+		)) + ".sample"
+		file_name = file_name.replace(sep, "_")
+		return path_join(
+			self.global_options['tmp_directory'],
+			file_name,
+		)
+
+	def load_sample(self):
+		"""
+		Returns the last saved sample as string.
+		"""
+		try:
+			with open(self.get_sample_filename(), 'r') as f:
+				sample_data = f.read()
+			return sample_data
+		except IOError as e:
+			return None
+
+	def save_sample(self, string):
+		"""
+		Saves a sample (string) to file.
+		"""
+		file_name = self.get_sample_filename()
+		dir_name = dirname(file_name)
+		if not isdir(dir_name):
+			makedirs(
+				dir_name,
+				0 | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
+			)
+		with open(file_name, 'wb') as f:
+			f.write(string)
+		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
 
 if __name__ == "__main__":
 	monitor = MeerkatMon()
