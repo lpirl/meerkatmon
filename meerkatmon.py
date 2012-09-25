@@ -2,8 +2,7 @@
 
 from sys import argv
 import stat
-from os import (	access, environ, pathsep, X_OK, sep, getlogin,
-					chmod, makedirs )
+from os import access, environ, pathsep, X_OK, sep, chmod, makedirs
 from os.path import isfile, join as path_join, dirname, isdir
 from urllib.parse import urlparse, ParseResult
 from inspect import getmembers, isclass
@@ -379,7 +378,7 @@ class BaseStrategy:
 		Returns the file name where the state is saved in.
 		"""
 		file_name = "__".join((
-			getlogin(),
+			environ["LOGNAME"],
 			self.section,
 		)) + ".sample"
 		file_name = file_name.replace(sep, "_")
@@ -411,7 +410,12 @@ class BaseStrategy:
 				0 | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
 			)
 		with open(file_name, 'wb') as f:
-			f.write(string)
+			f.write(
+				bytes(
+					str(string, errors='replace'),
+					'utf8'
+				)
+			)
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
 
 if __name__ == "__main__":
