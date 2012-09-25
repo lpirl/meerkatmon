@@ -86,7 +86,6 @@ class MeerkatMon():
 		Seperates special sections.
 		"""
 		configs = self.config_file_to_dict(filename)
-		configs = self.preprocess_configs(configs)
 
 		self.global_configs.update(
 			configs.pop('global', dict())
@@ -95,6 +94,8 @@ class MeerkatMon():
 		self.default_configs.update(
 			configs.pop('default', dict())
 		)
+
+		configs = self.preprocess_configs(configs)
 
 		self.configs = configs
 
