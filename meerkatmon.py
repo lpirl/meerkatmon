@@ -109,6 +109,7 @@ class MeerkatMon():
 		"""
 		Method prepares every service in configs for running the tests.
 		"""
+		self._strategies = MeerkatMon.get_strategies()
 		for section, options in configs.items():
 			debug("processing service '%s'" % section)
 			options = self.convert_types(section, options)
@@ -152,17 +153,29 @@ class MeerkatMon():
 
 		return options
 
-	def get_strategies(self):
+	@classmethod
+	def get_strategies(cls):
 		"""
 		Acquires all strategies (classes) in the module 'strategies'.
 		"""
-		if not getattr(self, '_strategies', None):
-			self._strategies = [	t[1] for t in
-									getmembers(strategies_module, isclass) ]
-			debug("found stategies: %s" % str(
-				[s.__name__ for s in self._strategies]
+		strategies = [	t[1] for t in
+						getmembers(strategies_module, isclass) ]
+		debug("found stategies: %s" % str(
+				[s.__name__ for s in strategies]
 			))
-		return self._strategies
+		return strategies
+
+
+	@classmethod
+	def get_strategies_options_help(cls):
+		"""
+		Collects and returns options and the corresponding help text
+		from all strategies.
+		"""
+		helps = dict()
+		for strategy in cls.get_strategies():
+			helps[strategy.__name__] = strategy.get_options_help()
+		return helps
 
 	def assign_strategy(self, section, options):
 		"""
@@ -425,12 +438,40 @@ class BaseStrategy:
 			)
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
 
+	@classmethod
+	def get_options_help(cls):
+		"""
+		Returns all possible options and the corresponding help texts
+		for this strategy. This return value is a list of tuples in the
+		following form:
+		(optional, key, help_text, )
+			optional: boolean if option required
+		"""
+		return []
+
 if __name__ == "__main__":
 	if argv[1] in ['--help', '-h']:
-		print("MeerkatMon - gawky script for monitoring services\n")
-		print("usage: [python3 -O] ./meerkatmon.py [config file]")
+		print("MeerkatMon - gawky script for monitoring services")
+		print("")
+		print("usage: [python3 -O] ./meerkatmon.py [OPTIONS] [config file]")
 		print("	python3 -O	turns off debug")
 		print("	config file	defaults to './meerkatmon.conf'")
+		print("")
+		print("Strategies and their configuration options:")
+		strategies_help = MeerkatMon.get_strategies_options_help()
+		for startegy_name, options_list in strategies_help.items():
+			if options_list:
+				print('	---', startegy_name, '---', )
+			for optional, key, help_text in options_list:
+				''.join((
+					'[' if optional else '',
+					key,
+					"	",
+					help_text,
+					']' if optional else '',
+				))
+
+		print("")
 		print("\nproject page: https://github.com/lpirl/meerkatmon")
 		print("Happy peeking!")
 		exit(0)
