@@ -9,17 +9,23 @@ from inspect import getmembers, isclass
 from smtplib import SMTP
 from email.mime.text import MIMEText
 
-import strategies as strategies_module
+import meerkatmon.strategies as strategies_module
 
-COLOR_STD='\033[0m'
-COLOR_FAIL='\033[31m'
-COLOR_LIGHT='\033[33m'
+COLOR_STD = '\033[0m'
+COLOR_FAIL = '\033[31m'
+COLOR_LIGHT = '\033[33m'
 
 def debug(msg):
+	"""
+	helper method to honor __debug__ for debug printing
+	"""
 	if __debug__:
 		print(msg)
 
 class MeerkatMon():
+	"""
+	Class for doing all the administrative work for monitoring.
+	"""
 
 	default_configs_filename = ""
 
@@ -462,10 +468,10 @@ if __name__ == "__main__":
 		for startegy_name, options_list in strategies_help.items():
 			if options_list:
 				print('	---', startegy_name, '---', )
-			for optional, key, help_text in options_list:
+			for optional, option_key, help_text in options_list:
 				''.join((
 					'[' if optional else '',
-					key,
+					option_key,
 					"	",
 					help_text,
 					']' if optional else '',
