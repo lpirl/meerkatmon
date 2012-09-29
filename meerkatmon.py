@@ -21,10 +21,7 @@ def debug(msg):
 
 class MeerkatMon():
 
-	default_configs_filename = path_join(
-		dirname(argv[0]),
-		"meerkatmon.conf"
-	)
+	default_configs_filename = ""
 
 	configs = dict()
 
@@ -39,6 +36,15 @@ class MeerkatMon():
 		'mail_from': 'meerkatmon',
 		'tmp_directory': '/tmp/meerkatmon'
 	}
+
+	def __init__(self, config_file=None):
+		"""
+		Accepts and sets alternative config file, if provided.
+		"""
+		self.default_configs_filename = config_file or path_join(
+			dirname(argv[0]),
+			"meerkatmon.conf"
+		)
 
 	def auto(self):
 		"""
@@ -420,5 +426,8 @@ class BaseStrategy:
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
 
 if __name__ == "__main__":
-	monitor = MeerkatMon()
+	try:
+		monitor = MeerkatMon(argv[1])
+	except IndexError as exception:
+		monitor = MeerkatMon()
 	monitor.auto()
