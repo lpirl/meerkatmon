@@ -426,6 +426,14 @@ class BaseStrategy:
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
 
 if __name__ == "__main__":
+	if argv[1] in ['--help', '-h']:
+		print("MeerkatMon - gawky script for monitoring services\n")
+		print("usage: [python3 -O] ./meerkatmon.py [config file]")
+		print("	python3 -O	turns off debug")
+		print("	config file	defaults to './meerkatmon.conf'")
+		print("\nproject page: https://github.com/lpirl/meerkatmon")
+		print("Happy peeking!")
+		exit(0)
 	try:
 		monitor = MeerkatMon(argv[1])
 	except IndexError as exception:
