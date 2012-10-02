@@ -44,6 +44,6 @@ It makes use of tools, that are present on nearly every server
 ## Flexibility
 
 MeerkatMon offers strategies in the submodule `strategies`
-(just one at the moment...) to check the availability of services.
+to check the availability of services.
 Administrators/Developers can easily provide new strategies by
 implementing a small interface on a class in this module.
