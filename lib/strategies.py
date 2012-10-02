@@ -1,3 +1,7 @@
+"""
+Module provides base class for all strategies.
+"""
+
 import stat
 from urllib.parse import ParseResult
 from os import access, environ, pathsep, X_OK, sep, chmod, makedirs
@@ -11,6 +15,12 @@ KNOWLEDGE_WORKS = 50
 KNOWLEDGE_FULL = 100
 
 class BaseStrategy:
+	"""
+	Base class for strategies.
+	Provides
+		* interface that has to be implemented
+		* facilities to	save and load sample data
+	"""
 	target = None
 
 	def __init__(self, global_options, section, options):
@@ -26,6 +36,9 @@ class BaseStrategy:
 
 
 	def _raise_subclass_error(self, method_name):
+		"""
+		Method provides unified "help" for implementing the interface.
+		"""
 		raise NotImplementedError(
 			"Subclass %s must provide method %s()" % (
 				self.__class__,
@@ -121,10 +134,10 @@ class BaseStrategy:
 		Returns the last saved sample as string.
 		"""
 		try:
-			with open(self.get_sample_filename(), 'r') as f:
-				sample_data = f.read()
+			with open(self.get_sample_filename(), 'r') as file_object:
+				sample_data = file_object.read()
 			return sample_data
-		except IOError as e:
+		except IOError:
 			return None
 
 	def save_sample(self, string):

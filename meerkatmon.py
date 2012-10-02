@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+"""
+This moduly mainly provides CLI interface to class MeerkatMon.
+"""
 
 from sys import argv
 
 from lib.base import MeerkatMon
-import strategies as strategies_module
 
 if __name__ == "__main__":
 	if '--help' in argv or '-h' in argv:

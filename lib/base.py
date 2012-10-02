@@ -8,7 +8,7 @@ from lib.util import debug
 
 import strategies as strategies_module
 from lib.strategies import KNOWLEDGE_NONE
-from lib.config import ConfigDict
+from lib.config import ConfigDict, OptionsDict
 
 class MeerkatMon():
 	"""
@@ -19,17 +19,17 @@ class MeerkatMon():
 
 	configs = dict()
 
-	default_configs = {
+	default_configs = OptionsDict({
 		'timeout': '10',
 		'admin': 'root@localhost',
 		'mail_success': False,
-	}
+	})
 
-	global_configs = {
+	global_configs = OptionsDict({
 		'mail_together': 'False',
 		'mail_from': 'meerkatmon',
 		'tmp_directory': '/tmp/meerkatmon'
-	}
+	})
 
 	def __init__(self, config_file=None):
 		"""
@@ -79,7 +79,6 @@ class MeerkatMon():
 		self._strategies = MeerkatMon.get_strategies()
 		for section, options in configs.items():
 			debug("processing service '%s'" % section)
-			options = self.convert_types(section, options)
 			if section not in ['default', 'global']:
 				options.apply_defaults(self.default_configs)
 				options = self.parse_target(section, options)
@@ -158,17 +157,6 @@ class MeerkatMon():
 
 		return options
 
-	def convert_types(self, section, options):
-		"""
-		Parses types from values from options.
-		"""
-
-		for key, value in options.items():
-			if key in ['mail_success', 'mail_together']:
-				options[key] = bool(value)
-
-		return options
-
 	def test_targets(self):
 		"""
 		Method simply runs tests for every section.
@@ -186,7 +174,7 @@ class MeerkatMon():
 		for section, options in self.configs.items():
 			strategy = options['strategy']
 
-			if not options['mail_success'] and strategy.get_last_check_success():
+			if not options.get_bool('mail_success') and strategy.get_last_check_success():
 				continue
 
 			results[section] = {
@@ -194,7 +182,7 @@ class MeerkatMon():
 				'subject': strategy.get_mail_subject()
 			}
 
-		if self.global_configs['mail_together']:
+		if self.global_configs.get_bool('mail_together'):
 			self.mail_results_together(results)
 		else:
 			self.mail_results_separate(results)
