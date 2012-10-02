@@ -1,8 +1,48 @@
+"""
+Various classes to simplify handling of configuration.
+
+Terminology:
+	config[uration]		whole set of sections and their options
+	section				set of options
+	option				key, value pair
+"""
+
 from lib.util import debug
 
-class FillFromFileDict(dict):
+class OptionsDict(dict):
 	"""
-	Like a dictionary, but can be filled from a config file.
+	Like a dictionary, but can privede values casted to some type.
+	"""
+
+	def apply_defaults(self, dict_with_defaults):
+		"""
+		Like dict's update(…) but w/o overwrites.
+		"""
+		for key, default_value in dict_with_defaults.items():
+			if not self.__contains__(key):
+				self.__setitem__(key, default_value)
+
+	def get_int(self, *args, **kwargs):
+		"""
+		Returns requested value as int
+		"""
+		return int(super(OptionsDict, self).get(*args, **kwargs))
+
+	def get_bool(self, *args, **kwargs):
+		"""
+		Returns requested value as int
+		"""
+		return bool(super(OptionsDict, self).get(*args, **kwargs))
+
+	def get_float(self, *args, **kwargs):
+		"""
+		Returns requested value as int
+		"""
+		return float(super(OptionsDict, self).get(*args, **kwargs))
+
+class ConfigDict(dict):
+	"""
+	Ensures that nested dicts in FillFromFileDict are OptionsDict's.
 	"""
 
 	def fill_from_file(self, filename):
@@ -12,7 +52,7 @@ class FillFromFileDict(dict):
 		debug("loading configuration from '%s'" % filename)
 		fp = open(filename, "r")
 		sections = dict()
-		options = dict()
+		options = OptionsDict()
 		for line in fp.readlines():
 			line = line.strip()
 
@@ -20,7 +60,7 @@ class FillFromFileDict(dict):
 				continue
 
 			if line.startswith('[') and line.endswith(']'):
-				options = dict()
+				options = OptionsDict()
 				sections[line[1:-1].strip()] = options
 				continue
 
@@ -33,40 +73,3 @@ class FillFromFileDict(dict):
 		debug("configuration is: '%s'" % str(sections))
 
 		self.update(sections)
-
-class CastingDict(dict):
-	"""
-	Like a dictionary, but can privede values casted to some type.
-	"""
-
-	def get_int(self, *args, **kwargs):
-		"""
-		Returns requested value as int
-		"""
-		return int(super(CastingDict, self).get(*args, **kwargs))
-
-	def get_bool(self, *args, **kwargs):
-		"""
-		Returns requested value as int
-		"""
-		return bool(super(CastingDict, self).get(*args, **kwargs))
-
-	def get_float(self, *args, **kwargs):
-		"""
-		Returns requested value as int
-		"""
-		return float(super(CastingDict, self).get(*args, **kwargs))
-
-class ConfigDict(FillFromFileDict):
-	"""
-	Ensures that nested dicts in FillFromFileDict are CastingDict's.
-	"""
-
-	def fill_from_file(self, *args, **kwargs):
-		"""
-		Converts every nested dict to a CastingDict.
-		"""
-		super(ConfigDict, self).fill_from_file(*args, **kwargs)
-
-		for key, value in self.items():
-			self.__setitem__(key, CastingDict(value))

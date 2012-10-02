@@ -81,19 +81,11 @@ class MeerkatMon():
 			debug("processing service '%s'" % section)
 			options = self.convert_types(section, options)
 			if section not in ['default', 'global']:
-				options = self.apply_defaults(section, options)
+				options.apply_defaults(self.default_configs)
 				options = self.parse_target(section, options)
 				options = self.assign_strategy(section, options)
 			configs[section] = options
 		return configs
-
-	def apply_defaults(self, section, options):
-		"""
-		Applies default configs to section.
-		"""
-		full_options = dict(self.default_configs)
-		full_options.update(options)
-		return full_options
 
 	def parse_target(self, section, options):
 		"""
