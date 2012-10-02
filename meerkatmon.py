@@ -9,7 +9,7 @@ from inspect import getmembers, isclass
 from smtplib import SMTP
 from email.mime.text import MIMEText
 
-import meerkatmon.strategies as strategies_module
+import strategies as strategies_module
 
 COLOR_STD = '\033[0m'
 COLOR_FAIL = '\033[31m'
@@ -200,7 +200,7 @@ class MeerkatMon():
 			if knowledge > best_strategy[1]:
 				best_strategy = (strategy_for_target, knowledge)
 
-		debug("    choosen '%s'" % strategy.__name__)
+		debug("    choosen '%s'" % best_strategy[0].__class__.__name__)
 		options['strategy'] = best_strategy[0]
 
 		return options
@@ -456,7 +456,7 @@ class BaseStrategy:
 		return []
 
 if __name__ == "__main__":
-	if argv[1] in ['--help', '-h']:
+	if '--help' in argv or '-h' in argv:
 		print("MeerkatMon - gawky script for monitoring services")
 		print("")
 		print("usage: [python3 -O] ./meerkatmon.py [OPTIONS] [config file]")
