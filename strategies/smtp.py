@@ -2,12 +2,12 @@
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from urllib.error import URLError
 from socket import error as SocketError
-from meerkatmon import (	BaseStrategy,
-							debug,
-							KNOWLEDGE_ALIVE,
-							KNOWLEDGE_NONE,
-							COLOR_LIGHT,
-							COLOR_STD )
+from lib.strategies import (	BaseStrategy,
+								KNOWLEDGE_ALIVE,
+								KNOWLEDGE_NONE )
+from lib.util import (	debug,
+						COLOR_LIGHT,
+						COLOR_STD )
 
 class Smtp(BaseStrategy):
 

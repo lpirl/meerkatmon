@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 from subprocess import check_output, CalledProcessError, STDOUT
 
-from meerkatmon import (	BaseStrategy,
-							debug,
-							KNOWLEDGE_EXISTS,
-							KNOWLEDGE_NONE,
-							COLOR_LIGHT,
-							COLOR_STD )
+from lib.strategies import (	BaseStrategy,
+								KNOWLEDGE_EXISTS,
+								KNOWLEDGE_NONE )
+from lib.util import (	debug,
+						COLOR_LIGHT,
+						COLOR_STD )
 
 class Ping(BaseStrategy):
 

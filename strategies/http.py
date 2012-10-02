@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
-from meerkatmon import (	BaseStrategy,
-							debug,
-							KNOWLEDGE_ALIVE,
-							KNOWLEDGE_NONE,
-							COLOR_LIGHT,
-							COLOR_STD )
+from lib.strategies import (	BaseStrategy,
+								KNOWLEDGE_ALIVE,
+								KNOWLEDGE_NONE )
+from lib.util import (	debug,
+						COLOR_LIGHT,
+						COLOR_STD )
 
 class Http(BaseStrategy):
 
