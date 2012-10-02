@@ -8,6 +8,7 @@ from lib.util import debug
 
 import strategies as strategies_module
 from lib.strategies import KNOWLEDGE_NONE
+from lib.config import ConfigDict
 
 class MeerkatMon():
 	"""
@@ -49,42 +50,15 @@ class MeerkatMon():
 		self.test_targets()
 		self.mail_results()
 
-	def config_file_to_dict(self, filename = None):
-		"""
-		Method loads configuration from file into dictionary.
-		"""
-		filename = filename or self.default_configs_filename
-		debug("loading configuration from '%s'" % filename)
-		fp = open(filename, "r")
-		configs = dict()
-		options = dict()
-		for line in fp.readlines():
-			line = line.strip()
-
-			if line.startswith("#"):
-				continue
-
-			if line.startswith('[') and line.endswith(']'):
-				options = dict()
-				configs[line[1:-1].strip()] = options
-				continue
-
-			if '=' in line:
-				key, value = tuple(line.split("=", 1))
-				options[key.strip()] = value.strip()
-				continue
-
-		fp.close()
-		debug("configuration is: '%s'" % str(configs))
-
-		return configs
-
 	def load_configs(self, filename = None):
 		"""
 		Coordinates loading of config.
 		Seperates special sections.
 		"""
-		configs = self.config_file_to_dict(filename)
+		configs = ConfigDict()
+		configs.fill_from_file(
+			filename or self.default_configs_filename
+		)
 
 		self.global_configs.update(
 			configs.pop('global', dict())
