@@ -25,13 +25,13 @@ class BaseStrategy:
 	"""
 	target = None
 
-	_options = OptionsDict({
+	_base_options = OptionsDict({
 		'timeout': '10',
 		'admin': 'root@localhost',
 		'mail_success': False,
 	})
 
-	_options_help = {
+	_base_options_help = {
 		'timeout': 'seconds until network operations time out',
 		'admin': 'e mail adress of administrator for a section',
 		'mail_success': 'if True, mails will be sent on success too',
@@ -68,11 +68,7 @@ class BaseStrategy:
 		"""
 		Returns all possible options mixed with options from superclass.
 		"""
-		options = getattr(
-			super(BaseStrategy, self),
-			'options',
-			OptionsDict()
-		)
+		options = OptionsDict(self._base_options)
 		options.update(self._options)
 		return options
 
@@ -89,12 +85,8 @@ class BaseStrategy:
 		Returns all possible options help mixed with options help
 		from superclass.
 		"""
-		options_help = getattr(
-			super(cls),
-			'options_help',
-			dict()
-		)
-		options_help.update(cls._options_help)
+		options_help = dict(cls._base_options_help)
+		options_help.update(getattr(cls, '_options_help', dict()))
 		return options_help
 
 	@classmethod

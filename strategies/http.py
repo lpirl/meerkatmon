@@ -10,6 +10,11 @@ from lib.util import (	debug,
 
 class Http(BaseStrategy):
 
+
+	_options_help = {
+		'max_size_deviation_percentage': 'test fails if response deviates too much in size',
+	}
+
 	message = None
 	success = False
 	response_str = None
@@ -36,7 +41,7 @@ class Http(BaseStrategy):
 			try:
 				response = urlopen(
 					self.target.geturl(),
-					timeout = int(self.options.get('timeout', '5'))
+					timeout = self.options.get_int('timeout', 5)
 				)
 				response_str = response.read()
 			except HTTPError as e:
@@ -75,8 +80,9 @@ class Http(BaseStrategy):
 	def compare_responses(self, response1, response2):
 
 		try:
-			max_deviation = float(
-				self.options.get('max_size_deviation_percentage', None)
+			max_deviation = self.options.get_float(
+				'max_size_deviation_percentage',
+				None
 			)
 		except TypeError as e:
 			return

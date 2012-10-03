@@ -32,7 +32,7 @@ class Smtp(BaseStrategy):
 		Method does check the server.
 		"""
 
-		timeout = int(self.options['timeout'])
+		timeout = self.options.get_int('timeout')
 		if self.target.scheme.lower().endswith('s'):
 			smtp_cls = lambda netloc: SMTP_SSL(
 				netloc, None, None, None, None, timeout
