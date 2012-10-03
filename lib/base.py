@@ -15,9 +15,11 @@ class MeerkatMon():
 	Class for doing all the administrative work for monitoring.
 	"""
 
-	default_configs_filename = ""
+	default_configs_filename = path_join(
+		dirname(argv[0]),"meerkatmon.conf"
+	)
 
-	configs = dict()
+	configs = ConfigDict()
 
 	default_configs = OptionsDict({
 		'timeout': '10',
@@ -35,10 +37,8 @@ class MeerkatMon():
 		"""
 		Accepts and sets alternative config file, if provided.
 		"""
-		self.default_configs_filename = config_file or path_join(
-			dirname(argv[0]),
-			"meerkatmon.conf"
-		)
+		if config_file:
+			self.default_configs_filename = config_file
 
 	def auto(self):
 		"""
@@ -55,7 +55,7 @@ class MeerkatMon():
 		Coordinates loading of config.
 		Seperates special sections.
 		"""
-		configs = ConfigDict()
+		configs = self.configs
 		configs.fill_from_file(
 			filename or self.default_configs_filename
 		)
