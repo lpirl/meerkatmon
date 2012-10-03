@@ -7,6 +7,8 @@ from urllib.parse import ParseResult
 from os import access, environ, pathsep, X_OK, sep, chmod, makedirs
 from os.path import isfile, join as path_join, dirname, isdir
 
+from lib.config import OptionsDict
+
 KNOWLEDGE_NONE = 0
 KNOWLEDGE_EXISTS = 10
 KNOWLEDGE_ALIVE = 20
@@ -23,6 +25,20 @@ class BaseStrategy:
 	"""
 	target = None
 
+	_options = OptionsDict({
+		'timeout': '10',
+		'admin': 'root@localhost',
+		'mail_success': False,
+	})
+
+	_options_help = {
+		'timeout': 'seconds until network operations time out',
+		'admin': 'e mail adress of administrator for a section',
+		'mail_success': 'if True, mails will be sent on success too',
+	}
+
+	strategy_help = ""
+
 	def __init__(self, global_options, section, options):
 		target = options['parsed_target']
 		if not isinstance(target, ParseResult):
@@ -34,17 +50,59 @@ class BaseStrategy:
 		self.options = options
 		self.target = target
 
-
-	def _raise_subclass_error(self, method_name):
+	@classmethod
+	def _raise_subclass_error(cls, method_name, class_method=False):
 		"""
 		Method provides unified "help" for implementing the interface.
 		"""
 		raise NotImplementedError(
-			"Subclass %s must provide method %s()" % (
-				self.__class__,
+			"Subclass %s must provide %smethod %s()" % (
+				cls.__name__,
+				'class' if class_method else '',
 				method_name
 			)
 		)
+
+	@property
+	def options(self):
+		"""
+		Returns all possible options mixed with options from superclass.
+		"""
+		options = getattr(
+			super(BaseStrategy, self),
+			'options',
+			OptionsDict()
+		)
+		options.update(self._options)
+		return options
+
+	@options.setter
+	def options(self, options):
+		"""
+		Sets attribute options.
+		"""
+		self._options = options
+
+	@classmethod
+	def get_options_help(cls):
+		"""
+		Returns all possible options help mixed with options help
+		from superclass.
+		"""
+		options_help = getattr(
+			super(cls),
+			'options_help',
+			dict()
+		)
+		options_help.update(cls._options_help)
+		return options_help
+
+	@classmethod
+	def get_help(cls):
+		"""
+		Returns general short helpt text for strategy.
+		"""
+		cls._raise_subclass_error('get_help', True)
 
 	def which(self, search_program):
 		"""
@@ -92,7 +150,7 @@ class BaseStrategy:
 		"""
 		Method that actually runs the checks.
 		"""
-		self._raise_subclass_error('do_check')
+		self.__class__._raise_subclass_error('do_check')
 
 	def get_mail_message(self):
 		"""
@@ -100,20 +158,20 @@ class BaseStrategy:
 		information about the error/sucess.
 		Will never be mailed w/o information from get_mail_subject.
 		"""
-		self._raise_subclass_error('get_mail_message')
+		self.__class__._raise_subclass_error('get_mail_message')
 
 	def get_mail_subject(self):
 		"""
 		Returns a short, meaningful summary of the error/success.
 		Will never be mailed w/o information from get_mail_message.
 		"""
-		self._raise_subclass_error('get_mail_subject')
+		self.__class__._raise_subclass_error('get_mail_subject')
 
 	def get_last_check_success(self):
 		"""
 		Returns Boolean if last check was successful
 		"""
-		self._raise_subclass_error('get_last_check_success()')
+		self.__class__._raise_subclass_error('get_last_check_success()')
 
 	def get_sample_filename(self):
 		"""
@@ -159,14 +217,3 @@ class BaseStrategy:
 				)
 			)
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
-
-	@classmethod
-	def get_options_help(cls):
-		"""
-		Returns all possible options and the corresponding help texts
-		for this strategy. This return value is a list of tuples in the
-		following form:
-		(optional, key, help_text, )
-			optional: boolean if option required
-		"""
-		return []

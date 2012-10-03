@@ -19,6 +19,13 @@ class Http(BaseStrategy):
 			return KNOWLEDGE_ALIVE
 		return KNOWLEDGE_NONE
 
+	@classmethod
+	def get_help(cls):
+		"""
+		Returns general short helpt text for strategy.
+		"""
+		return 'Used for HTTP targets.'
+
 	def _do_request(self):
 		"""
 		Method does actually speak with the target and sets
@@ -53,7 +60,7 @@ class Http(BaseStrategy):
 		"""
 		self._do_request()
 
-		debug("  %sreached\n\n'%s'\n" % (
+		debug("%sreached\n\n'%s'\n" % (
 			'NOT ' if not self.success else '',
 			''.join([COLOR_LIGHT, self.message, COLOR_STD])
 		))
@@ -82,7 +89,7 @@ class Http(BaseStrategy):
 			deviation, max_deviation
 		)
 
-		debug("  " + additional_message)
+		debug(additional_message)
 
 		self.success = deviation <= max_deviation
 		self.message += "\n\n" + additional_message

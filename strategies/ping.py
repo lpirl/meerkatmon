@@ -10,6 +10,14 @@ from lib.util import (	debug,
 
 class Ping(BaseStrategy):
 
+
+	@classmethod
+	def get_help(cls):
+		"""
+		Returns general short helpt text for strategy.
+		"""
+		return 'Checks if target answers to a ping.'
+
 	def target_knowledge(self):
 		if self.target.netloc:
 			return KNOWLEDGE_EXISTS
@@ -35,7 +43,7 @@ class Ping(BaseStrategy):
 		self.output = output.decode().strip()
 		self.success = success
 
-		debug("  had %ssuccess \n\n'%s'\n" % (
+		debug("had %ssuccess \n\n'%s'\n" % (
 			'NO ' if not self.success else '',
 			''.join([COLOR_LIGHT, self.output, COLOR_STD])
 		))

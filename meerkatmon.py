@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python3 -OO
 """
 This moduly mainly provides CLI interface to class MeerkatMon.
 """
@@ -11,23 +11,32 @@ if __name__ == "__main__":
 	if '--help' in argv or '-h' in argv:
 		print("MeerkatMon - gawky script for monitoring services")
 		print("")
-		print("usage: [python3 -O] ./meerkatmon.py [OPTIONS] [config file]")
-		print("	python3 -O	turns off debug")
+		print("usage: [python3] ./meerkatmon.py [config file]")
+		print("	python3		turns on debug")
 		print("	config file	defaults to './meerkatmon.conf'")
 		print("")
+		print("Global configuration options:\n")
+		for option_key, help_text in MeerkatMon.global_options_help.items():
+			print(''.join((
+				'	',
+				option_key,
+				': ',
+				help_text,
+			)))
+		print("")
 		print("Strategies and their configuration options:")
-		strategies_help = MeerkatMon.get_strategies_options_help()
-		for startegy_name, options_list in strategies_help.items():
-			if options_list:
-				print('	---', startegy_name, '---', )
-			for optional, option_key, help_text in options_list:
-				''.join((
-					'[' if optional else '',
+		strategies_help = MeerkatMon.get_strategies_help()
+		options_help = MeerkatMon.get_strategies_options_help()
+		for strategy_name, options_list in options_help.items():
+			print('\n	---', strategy_name, '---')
+			print('	', strategies_help[strategy_name])
+			for option_key, help_text in options_list.items():
+				print(''.join((
+					'	',
 					option_key,
-					"	",
+					': ',
 					help_text,
-					']' if optional else '',
-				))
+				)))
 
 		print("")
 		print("\nproject page: https://github.com/lpirl/meerkatmon")

@@ -7,7 +7,7 @@ from os.path import join as path_join, dirname
 from lib.util import debug
 
 import strategies as strategies_module
-from lib.strategies import KNOWLEDGE_NONE
+from lib.strategies import BaseStrategy, KNOWLEDGE_NONE
 from lib.config import ConfigDict, OptionsDict
 
 class MeerkatMon():
@@ -21,17 +21,17 @@ class MeerkatMon():
 
 	configs = ConfigDict()
 
-	default_configs = OptionsDict({
-		'timeout': '10',
-		'admin': 'root@localhost',
-		'mail_success': False,
-	})
-
-	global_configs = OptionsDict({
+	global_options = OptionsDict({
 		'mail_together': 'False',
 		'mail_from': 'meerkatmon',
 		'tmp_directory': '/tmp/meerkatmon'
 	})
+
+	global_options_help = {
+		'mail_together': 'if False, mails will be sent by section (aggregated othewise)',
+		'mail_from': 'envelope sender for mails',
+		'tmp_directory': 'a directory where MeerkatMon can store files'
+	}
 
 	def __init__(self, config_file=None):
 		"""
@@ -60,13 +60,11 @@ class MeerkatMon():
 			filename or self.default_configs_filename
 		)
 
-		self.global_configs.update(
+		self.global_options.update(
 			configs.pop('global', dict())
 		)
 
-		self.default_configs.update(
-			configs.pop('default', dict())
-		)
+		self.default_configs = configs.pop('default', dict())
 
 		configs = self.preprocess_configs(configs)
 
@@ -100,14 +98,14 @@ class MeerkatMon():
 				"We won't ignore this error since it is an obvious " +
 				"misconfiguration"
 			)
-		debug("  parsing target '%s'" % target_str)
+		debug("parsing target '%s'" % target_str)
 
 		if "//" not in target_str:
 			target_str = "//" + target_str
 
 		parsed_target = urlparse(target_str)
 		options['parsed_target'] = parsed_target
-		debug("    " + str(parsed_target))
+		debug(str(parsed_target))
 
 		return options
 
@@ -123,28 +121,32 @@ class MeerkatMon():
 			))
 		return strategies
 
-
 	@classmethod
 	def get_strategies_options_help(cls):
 		"""
 		Collects and returns options and the corresponding help text
 		from all strategies.
 		"""
-		helps = dict()
-		for strategy in cls.get_strategies():
-			helps[strategy.__name__] = strategy.get_options_help()
-		return helps
+		return {	strategy.__name__: strategy.get_options_help()
+					for strategy in cls.get_strategies()}
+
+	@classmethod
+	def get_strategies_help(cls):
+		"""
+		Collects and returns help texts from all strategies.
+		"""
+		return {	strategy.__name__: strategy.get_help()
+					for strategy in cls.get_strategies()}
 
 	def assign_strategy(self, section, options):
 		"""
 		Rates all strategies for all targets and selects the best one.
 		"""
-		debug("  Searching strategy")
-		global_configs = self.global_configs
+		global_options = self.global_options
 		best_strategy = (None, KNOWLEDGE_NONE)
-		for strategy in self.get_strategies():
+		for strategy in self._strategies:
 			strategy_for_target = 	strategy(
-										global_configs,
+										global_options,
 										section,
 										options,
 									)
@@ -152,7 +154,7 @@ class MeerkatMon():
 			if knowledge > best_strategy[1]:
 				best_strategy = (strategy_for_target, knowledge)
 
-		debug("    choosen '%s'" % best_strategy[0].__class__.__name__)
+		debug("choosen strategy is '%s'" % best_strategy[0].__class__.__name__)
 		options['strategy'] = best_strategy[0]
 
 		return options
@@ -182,7 +184,7 @@ class MeerkatMon():
 				'subject': strategy.get_mail_subject()
 			}
 
-		if self.global_configs.get_bool('mail_together'):
+		if self.global_options.get_bool('mail_together'):
 			self.mail_results_together(results)
 		else:
 			self.mail_results_separate(results)
@@ -191,7 +193,7 @@ class MeerkatMon():
 		"""
 		Method mails test results all together to global admin.
 		"""
-		mail_from = self.global_configs['mail_from']
+		mail_from = self.global_options['mail_from']
 		admin = self.default_configs['admin']
 		subject = 'Output from checking ' + ', '.join(list(results.keys()))
 		delim = "\n\n%s\n\n" % ("="*80)
@@ -212,7 +214,7 @@ class MeerkatMon():
 		corresponding section or global admin if absent.
 		"""
 		srsm_tuples = list()
-		mail_from = self.global_configs['mail_from']
+		mail_from = self.global_options['mail_from']
 		for section, result in results.items():
 			admin = self.configs[section]['admin']
 			subject = result['subject']

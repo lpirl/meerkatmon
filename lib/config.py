@@ -49,7 +49,7 @@ class ConfigDict(dict):
 		"""
 		Method loads configuration from file into dictionary.
 		"""
-		debug("loading configuration from '%s'" % filename)
+		debug("filling configuration from '%s'" % filename)
 		fp = open(filename, "r")
 		sections = dict()
 		options = OptionsDict()
@@ -70,6 +70,6 @@ class ConfigDict(dict):
 				continue
 
 		fp.close()
-		debug("configuration is: '%s'" % str(sections))
+		debug("filled configuration is: '%s'" % str(sections))
 
 		self.update(sections)

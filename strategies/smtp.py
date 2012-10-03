@@ -14,6 +14,14 @@ class Smtp(BaseStrategy):
 	message = None
 	success = False
 
+
+	@classmethod
+	def get_help(cls):
+		"""
+		Returns general short helpt text for strategy.
+		"""
+		return 'Used to check SMTPS targets. Checks if HELO/EHLO works.'
+
 	def target_knowledge(self):
 		if self.target.scheme.lower() in ("smtp", "smtps", ):
 			return KNOWLEDGE_ALIVE
@@ -48,7 +56,7 @@ class Smtp(BaseStrategy):
 		self.message = message
 		self.success = success
 
-		debug("  %sreached\n\n'%s'\n" % (
+		debug("%sreached\n\n'%s'\n" % (
 			'NOT ' if not self.success else '',
 			''.join([COLOR_LIGHT, self.message, COLOR_STD])
 		))
