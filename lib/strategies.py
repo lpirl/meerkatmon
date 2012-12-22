@@ -183,8 +183,13 @@ class BaseStrategy:
 		"""
 		Returns the last saved sample as string.
 		"""
+		filename = self.get_sample_filename()
+		open_kwargs ={
+			'mode': 'r',
+			'encoding': 'utf8'
+		}
 		try:
-			with open(self.get_sample_filename(), 'r') as file_object:
+			with open(filename, **open_kwargs) as file_object:
 				sample_data = file_object.read()
 			return sample_data
 		except IOError:
