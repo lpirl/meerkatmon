@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from urllib.request import urlopen
+from urllib.request import Request, urlopen as urllib_urlopen
 from urllib.error import HTTPError, URLError
 from lib.strategies import (	BaseStrategy,
 								KNOWLEDGE_ALIVE,
@@ -31,6 +31,18 @@ class Http(BaseStrategy):
 		"""
 		return 'Used for HTTP targets.'
 
+	@classmethod
+	def urlopen(cls, url, *args, **kwargs):
+		"""
+		Wraps 'urlopen' provided by 'urllib' to set own user agent.
+		"""
+		request = Request(
+			url,
+			None,
+			{ 'User-Agent' : 'MeerkatMon' }
+		)
+		return urllib_urlopen(request, *args, **kwargs)
+
 	def _do_request(self):
 		"""
 		Method does actually speak with the target and sets
@@ -39,7 +51,7 @@ class Http(BaseStrategy):
 		response_str = None
 		try:
 			try:
-				response = urlopen(
+				response = Http.urlopen(
 					self.target.geturl(),
 					timeout = self.options.get_int('timeout', 5)
 				)
