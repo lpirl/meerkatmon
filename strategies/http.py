@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from urllib.request import Request, urlopen as urllib_urlopen
 from urllib.error import HTTPError, URLError
+from ssl import SSLError
 from lib.strategies import (	BaseStrategy,
 								KNOWLEDGE_ALIVE,
 								KNOWLEDGE_NONE )
@@ -56,7 +57,7 @@ class Http(BaseStrategy):
 					timeout = self.options.get_int('timeout', 5)
 				)
 				response_str = response.read()
-			except HTTPError as e:
+			except (HTTPError, SSLError) as e:
 				response = e
 
 			message = "server said: " + response.msg
