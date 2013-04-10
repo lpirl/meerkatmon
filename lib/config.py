@@ -35,7 +35,9 @@ class OptionsDict(dict):
 		Returns requested value as int
 		"""
 		value = super(OptionsDict, self).get(*args, **kwargs)
-		return value.lower() in self.true_strings
+		if type(value) is str:
+			return value.lower() in self.true_strings
+		return bool(value)
 
 	def get_float(self, *args, **kwargs):
 		"""
