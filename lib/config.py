@@ -14,6 +14,8 @@ class OptionsDict(dict):
 	Like a dictionary, but can privede values casted to some type.
 	"""
 
+	true_strings = ("yes", "true", "1", )
+
 	def apply_defaults(self, dict_with_defaults):
 		"""
 		Like dict's update(…) but w/o overwrites.
@@ -32,7 +34,10 @@ class OptionsDict(dict):
 		"""
 		Returns requested value as int
 		"""
-		return bool(super(OptionsDict, self).get(*args, **kwargs))
+		value = super(OptionsDict, self).get(*args, **kwargs)
+		if type(value) is str:
+			return value.lower() in self.true_strings
+		return bool(value)
 
 	def get_float(self, *args, **kwargs):
 		"""
