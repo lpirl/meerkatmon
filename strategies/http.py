@@ -10,9 +10,12 @@ from lib.util import (	debug,
 
 class Http(BaseStrategy):
 
+	OPTION_MAXDEVIATION = 'max_size_deviation_percentage'
+	OPTION_STATUSCODE = 'status_code'
 
 	_options_help = {
-		'max_size_deviation_percentage': 'test fails if response deviates too much in size',
+		OPTION_MAXDEVIATION: 'test fails if response deviates too much in size',
+		OPTION_STATUSCODE: 'set an expected status code another than 200',
 	}
 
 	message = None
@@ -48,7 +51,8 @@ class Http(BaseStrategy):
 				response = e
 
 			message = "server said: " + response.msg
-			success = response.code == 200
+			success = response.code == self.options.get_int(
+				self.OPTION_STATUSCODE, 200)
 
 		except URLError as e:
 			success = False
@@ -81,7 +85,7 @@ class Http(BaseStrategy):
 
 		try:
 			max_deviation = self.options.get_float(
-				'max_size_deviation_percentage',
+				self.OPTION_MAXDEVIATION,
 				None
 			)
 		except TypeError as e:
