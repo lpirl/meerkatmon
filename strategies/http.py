@@ -104,10 +104,12 @@ class Http(BaseStrategy):
 		except TypeError as e:
 			return
 
-		if len(response2):
+		if response2:
 			deviation = abs((100 * len(response1) / len(response2)) - 100 )
-		else:
+		elif response1:
 			deviation = 100
+		else:
+			deviation = 0
 		additional_message = "Deviation in size %f%% (max %f%%)" % (
 			deviation, max_deviation
 		)
