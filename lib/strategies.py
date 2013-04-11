@@ -204,7 +204,10 @@ class BaseStrategy:
 		with open(file_name, 'wb') as f:
 			f.write(
 				bytes(
-					str(string, errors='replace'),
+					str(
+						string if string else b'',
+						errors='replace'
+					),
 					'utf8'
 				)
 			)
