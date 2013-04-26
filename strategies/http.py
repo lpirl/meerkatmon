@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from urllib.request import Request, urlopen as urllib_urlopen
 from urllib.error import HTTPError, URLError
+from socket import error as socket_error
 from ssl import SSLError
 from lib.strategies import (	BaseStrategy,
 								KNOWLEDGE_ALIVE,
@@ -70,6 +71,10 @@ class Http(BaseStrategy):
 		except URLError as e:
 			success = False
 			message = str(e.reason)
+
+		except socket_error as e:
+			success = False
+			message = type(e) + ": " + str(e)
 
 		self.message = message
 		self.success = success
