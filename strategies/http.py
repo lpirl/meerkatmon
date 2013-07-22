@@ -74,7 +74,7 @@ class Http(BaseStrategy):
 
 		except socket_error as e:
 			success = False
-			message = type(e) + ": " + str(e)
+			message = str(type(e)) + ": " + str(e)
 
 		self.message = message
 		self.success = success
