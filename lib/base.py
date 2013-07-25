@@ -7,7 +7,7 @@ from os.path import join as path_join, dirname
 from lib.util import debug
 
 # see http://bugs.python.org/issue18557
-from email._parseaddr import AddressList
+from email.utils import getaddresses
 
 import strategies as strategies_module
 from lib.strategies import BaseStrategy, KNOWLEDGE_NONE
@@ -244,7 +244,7 @@ class MeerkatMon():
 			debug("sending %s" % str(msg))
 			s.sendmail(
 				srsm[0],
-				[t[1] for t in AddressList(srsm[1]).addresslist],
+				[recipient[1] for recipient in getaddresses([srsm[1]])],
 				msg.as_string()
 			)
 		s.quit()
