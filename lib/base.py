@@ -6,6 +6,9 @@ from urllib.parse import urlparse
 from os.path import join as path_join, dirname
 from lib.util import debug
 
+# see http://bugs.python.org/issue18557
+from email._parseaddr import AddressList
+
 import strategies as strategies_module
 from lib.strategies import BaseStrategy, KNOWLEDGE_NONE
 from lib.config import ConfigDict, OptionsDict
@@ -239,5 +242,9 @@ class MeerkatMon():
 			msg['To'] = srsm[1]
 			msg['Subject'] = srsm[2]
 			debug("sending %s" % str(msg))
-			s.sendmail(srsm[0], [srsm[1]], msg.as_string())
+			s.sendmail(
+				srsm[0],
+				[t[1] for t in AddressList(srsm[1]).addresslist],
+				msg.as_string()
+			)
 		s.quit()
