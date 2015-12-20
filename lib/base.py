@@ -31,7 +31,7 @@ class MeerkatMon():
 		'mail_together': 'False',
 		'mail_from': 'meerkatmon@%s' % getfqdn(),
 		'mail_threaded': 'True',
-		'mail_threaded_per_host': 'True',
+		'mail_threaded_per_host': 'False',
 		'tmp_directory': '/tmp/meerkatmon'
 	})
 
