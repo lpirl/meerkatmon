@@ -12,12 +12,14 @@ from lib.util import (	debug,
 
 class Http(BaseStrategy):
 
-	OPTION_MAXDEVIATION = 'max_size_deviation_percentage'
-	OPTION_STATUSCODE = 'status_code'
+	OPTION_MAX_DEVIATION = 'max_size_deviation_percentage'
+	OPTION_STATUS_CODE = 'status_code'
+	OPTION_CHECK_SSL_TOO = 'check_SSL_too'
 
 	_options_help = {
-		OPTION_MAXDEVIATION: 'test fails if response deviates too much in size',
-		OPTION_STATUSCODE: 'set an expected status code another than 200',
+		OPTION_MAX_DEVIATION: 'test fails if response deviates too much in size',
+		OPTION_STATUS_CODE: 'set an expected status code another than 200',
+		OPTION_CHECK_SSL_TOO: 'for HTTP targets, check target using HTTPS as well',
 	}
 
 	message = None
@@ -44,7 +46,7 @@ class Http(BaseStrategy):
 		request = Request(
 			url,
 			None,
-			{ 'User-Agent' : 'MeerkatMon' }
+			{ 'User-Agent' : 'MeerkatMon (https://github.com/lpirl/meerkatmon)' }
 		)
 		return urllib_urlopen(request, *args, **kwargs)
 
@@ -66,7 +68,7 @@ class Http(BaseStrategy):
 
 			message = "server said: " + response.msg
 			success = response.code == self.options.get_int(
-				self.OPTION_STATUSCODE, 200)
+				self.OPTION_STATUS_CODE, 200)
 
 		except URLError as e:
 			success = False
@@ -103,7 +105,7 @@ class Http(BaseStrategy):
 
 		try:
 			max_deviation = self.options.get_float(
-				self.OPTION_MAXDEVIATION,
+				self.OPTION_MAX_DEVIATION,
 				None
 			)
 		except TypeError as e:
