@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from os.path import join as path_join, dirname
 from lib.util import debug
 from socket import getfqdn
+from tempfile import gettempdir
 
 # see http://bugs.python.org/issue18557
 from email.utils import getaddresses
@@ -32,7 +33,7 @@ class MeerkatMon():
 		'mail_from': 'meerkatmon@%s' % getfqdn(),
 		'mail_threaded': 'True',
 		'mail_threaded_per_host': 'False',
-		'tmp_directory': '/tmp/meerkatmon'
+		'tmp_directory': path_join(gettempdir(), 'meerkatmon')
 	})
 
 	global_options_help = {
