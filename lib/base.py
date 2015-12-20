@@ -101,13 +101,14 @@ class MeerkatMon():
 		Raises if not possible.
 		"""
 
-		try:
+		target_str = section
+
+		if 'target' in options:
 			target_str = options['target']
-		except KeyError:
-			raise KeyError(
-				"Section '%s' has no target. " % section +
-				"We won't ignore this error since it is an obvious " +
-				"misconfiguration"
+			print(
+				"WARNING: Section '%s' has option 'target'. " % section +
+				"This option will go away in the future. " +
+				"Please use the section name as target.",
 			)
 		debug("parsing target '%s'" % target_str)
 
