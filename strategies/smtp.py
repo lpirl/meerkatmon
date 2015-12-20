@@ -56,14 +56,14 @@ class Smtp(BaseStrategy, DeviationCheckMixin):
 			client.quit()
 			message = "server said: " + response_message.decode()
 			success = response_status == 220
+
+			self.message = message
+			self.success = success
+
+			self.check_deviation(response_message)
 		except (SocketError, SMTPException, ) as error:
 			message = str(error)
 			success = False
-
-		self.message = message
-		self.success = success
-
-		self.check_deviation(response_message)
 
 		debug("%sreached\n\n'%s'\n" % (
 			'NOT ' if not self.success else '',
