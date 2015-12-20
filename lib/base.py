@@ -1,3 +1,5 @@
+# coding: UTF8
+
 from smtplib import SMTP
 from email.mime.text import MIMEText
 from inspect import getmembers, isclass
@@ -5,6 +7,7 @@ from sys import argv
 from urllib.parse import urlparse
 from os.path import join as path_join, dirname
 from lib.util import debug
+from socket import getfqdn
 
 # see http://bugs.python.org/issue18557
 from email.utils import getaddresses
@@ -26,13 +29,17 @@ class MeerkatMon():
 
 	global_options = OptionsDict({
 		'mail_together': 'False',
-		'mail_from': 'meerkatmon',
+		'mail_from': 'meerkatmon@%s' % getfqdn(),
+		'mail_threaded': 'True',
+		'mail_threaded_per_host': 'True',
 		'tmp_directory': '/tmp/meerkatmon'
 	})
 
 	global_options_help = {
 		'mail_together': 'if False, mails will be sent by section (aggregated othewise)',
 		'mail_from': 'envelope sender for mails',
+		'mail_threaded': 'enable threaded (per section in config file) view for email clients',
+		'mail_threaded_per_host': 'enable additional threading per checking host',
 		'tmp_directory': 'a directory where MeerkatMon can store files'
 	}
 
@@ -192,59 +199,85 @@ class MeerkatMon():
 		else:
 			self.mail_results_separate(results)
 
+	def _mail_headers_add_references(self, headers, section=None):
+		global_options = self.global_options
+		if not global_options.get_bool('mail_threaded'):
+			return headers
+		references = "meerkatmon"
+		if section:
+			references += '."%s"' % section
+		references += "@meerkatmon"
+		if global_options.get_bool('mail_threaded_per_host'):
+			references += ".%s" % getfqdn()
+		headers["References"] = "<%s>" % references
+		return headers
+
 	def mail_results_together(self, results):
 		"""
 		Method mails test results all together to global admin.
 		"""
 		mail_from = self.global_options['mail_from']
-		admin = self.default_configs['admin']
-		subject = 'Output from checking ' + ', '.join(list(results.keys()))
-		delim = "\n\n%s\n\n" % ("="*80)
-		message = delim.join((
+		mail_admin = self.default_configs['admin']
+		mail_subject = 'Output from checking ' + ', '.join(list(results.keys()))
+		mail_messages_delim = "\n\n%s\n\n" % ("="*80)
+		mail_message = mail_messages_delim.join((
 			''.join(("--- ", r['subject'], " ---\n", r['message']))
 			for r in list(results.values())
 		))
-		if not message:
+		if not mail_message:
 			debug("Mailing together. Nothing to do.")
 			return
-		srsm_tuple = (mail_from, admin, subject, message)
-		debug("Mailing together. Collected %s" % str(srsm_tuple))
-		self.send_mails([srsm_tuple])
+		mail_headers = {
+			'From': mail_from,
+			'To': mail_admin,
+			'Subject': mail_subject,
+		}
+		self._mail_headers_add_references(mail_headers)
+
+		debug("Mailing together. Collected %s" % str((mail_headers, mail_message)))
+		self.send_mails([(mail_headers, mail_message)])
 
 	def mail_results_separate(self, results):
 		"""
 		Method mails test results all together to admin specified in
 		corresponding section or global admin if absent.
 		"""
-		srsm_tuples = list()
+
+		# list of tuples: (<header dict>, <message str>)
+		headers_and_messages = list()
+
 		mail_from = self.global_options['mail_from']
 		for section, result in results.items():
-			admin = self.configs[section]['admin']
-			subject = result['subject']
-			message = result['message']
-			srsm_tuples.append((
-				(mail_from, admin, subject, message)
-			))
-		debug("mailing separate. Collected %s" % str(srsm_tuples))
-		self.send_mails(srsm_tuples)
+			mail_to = self.configs[section]['admin']
+			mail_subject = result['subject']
+			mail_message = result['message']
+			mail_headers = {
+				'From': mail_from,
+				'To': mail_to,
+				'Subject': mail_subject,
+			}
+			self._mail_headers_add_references(mail_headers, section)
+			headers_and_messages.append((mail_headers, mail_message))
 
-	def send_mails(self, sender_recipient_subject_message_tuples=None):
+		debug("mailing separate. Collected %s" % str(headers_and_messages))
+		self.send_mails(headers_and_messages)
+
+	def send_mails(self, headers_and_messages=None):
 		"""
 		Method actually does send an email.
 		"""
-		if not sender_recipient_subject_message_tuples:
+		if not headers_and_messages:
 			return
 
 		s = SMTP('localhost')
-		for srsm in sender_recipient_subject_message_tuples:
-			msg = MIMEText(srsm[3])
-			msg['From'] = srsm[0]
-			msg['To'] = srsm[1]
-			msg['Subject'] = srsm[2]
+		for headers, message in headers_and_messages:
+			msg = MIMEText(message)
+			for key, value in headers.items():
+				msg[key] = value
 			debug("sending %s" % str(msg))
 			s.sendmail(
-				srsm[0],
-				[recipient[1] for recipient in getaddresses([srsm[1]])],
+				headers['From'],
+				[r[1] for r in getaddresses([headers['To']])],
 				msg.as_string()
 			)
 		s.quit()
