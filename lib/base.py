@@ -32,7 +32,7 @@ class MeerkatMon():
 		'mail_together': 'False',
 		'mail_from': 'meerkatmon@%s' % getfqdn(),
 		'mail_threaded': 'True',
-		'mail_threaded_per_host': 'False',
+		'mail_threaded_per_checking_host': 'False',
 		'tmp_directory': path_join(gettempdir(), 'meerkatmon')
 	})
 
@@ -40,7 +40,7 @@ class MeerkatMon():
 		'mail_together': 'if False, mails will be sent by section (aggregated othewise)',
 		'mail_from': 'envelope sender for mails',
 		'mail_threaded': 'enable threaded (per section in config file) view for email clients',
-		'mail_threaded_per_host': 'enable additional threading per checking host',
+		'mail_threaded_per_checking_host': 'enable additional threading per checking host',
 		'tmp_directory': 'a directory where MeerkatMon can store files'
 	}
 
@@ -208,7 +208,7 @@ class MeerkatMon():
 		if section:
 			references += '."%s"' % section
 		references += "@meerkatmon"
-		if global_options.get_bool('mail_threaded_per_host'):
+		if global_options.get_bool('mail_threaded_per_checking_host'):
 			references += ".%s" % getfqdn()
 		headers["References"] = "<%s>" % references
 		return headers
