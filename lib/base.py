@@ -72,10 +72,25 @@ class MeerkatMon():
 		)
 
 		self.global_options.update(
-			configs.pop('global', dict())
+			configs.pop('meerkatmon_global', dict())
 		)
+		if 'global' in configs:
+			print(
+				"WARNING: It seems as if you are using the deprecated section" +
+				" name 'global', please rename it to 'meerkatmon_global' as it " +
+				"is incompatible with future versions."
+			)
+			self.global_options.update(configs.pop('global'))
 
-		self.default_configs = configs.pop('default', dict())
+		self.default_configs = configs.pop('meerkatmon_default', dict())
+		if 'default' in configs:
+			print(
+				"WARNING: It seems as if you are using the deprecated section" +
+				" name 'default', please rename it to 'meerkatmon_default' as it " +
+				"is incompatible with future versions."
+			)
+			self.default_configs = configs.pop('default')
+
 
 		configs = self.preprocess_configs(configs)
 
@@ -88,7 +103,7 @@ class MeerkatMon():
 		self._strategies = MeerkatMon.get_strategies()
 		for section, options in configs.items():
 			debug("processing service '%s'" % section)
-			if section not in ['default', 'global']:
+			if section not in ['meerkatmon_default', 'meerkatmon_global']:
 				options.apply_defaults(self.default_configs)
 				options = self.parse_target(section, options)
 				options = self.assign_strategy(section, options)
