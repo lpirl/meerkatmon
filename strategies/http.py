@@ -3,14 +3,14 @@ from urllib.request import Request, urlopen as urllib_urlopen
 from urllib.error import HTTPError, URLError
 from socket import error as socket_error
 from ssl import SSLError
-from lib.strategies import (	BaseStrategy,
+from lib.strategies import (	BaseStrategy, DeviationCheckMixin,
 								KNOWLEDGE_ALIVE,
 								KNOWLEDGE_NONE )
 from lib.util import (	debug,
 						COLOR_LIGHT,
 						COLOR_STD )
 
-class Http(BaseStrategy):
+class Http(BaseStrategy, DeviationCheckMixin):
 
 	OPTION_MAX_DEVIATION = 'max_size_deviation_percentage'
 	OPTION_STATUS_CODE = 'status_code'
@@ -94,37 +94,7 @@ class Http(BaseStrategy):
 			''.join([COLOR_LIGHT, self.message, COLOR_STD])
 		))
 
-		if self.success:
-			response_str = self.response_str
-			prev_response_str = self.load_sample()
-			if prev_response_str is not None:
-				self.compare_responses(response_str, prev_response_str)
-			self.save_sample(response_str)
-
-	def compare_responses(self, response1, response2):
-
-		try:
-			max_deviation = self.options.get_float(
-				self.OPTION_MAX_DEVIATION,
-				None
-			)
-		except TypeError as e:
-			return
-
-		if response2:
-			deviation = abs((100 * len(response1) / len(response2)) - 100 )
-		elif response1:
-			deviation = 100
-		else:
-			deviation = 0
-		additional_message = "Deviation in size %f%% (max %f%%)" % (
-			deviation, max_deviation
-		)
-
-		debug(additional_message)
-
-		self.success = deviation <= max_deviation
-		self.message += "\n\n" + additional_message
+		self.check_deviation(self.response_str)
 
 	def get_mail_message(self):
 		try:

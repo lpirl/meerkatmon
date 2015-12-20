@@ -8,6 +8,7 @@ from os import access, environ, pathsep, X_OK, sep, chmod, makedirs
 from os.path import isfile, join as path_join, dirname, isdir
 
 from lib.config import OptionsDict
+from lib.util import debug
 
 KNOWLEDGE_NONE = 0
 KNOWLEDGE_EXISTS = 10
@@ -217,3 +218,34 @@ class BaseStrategy:
 				)
 			)
 		chmod(file_name, 0 | stat.S_IRUSR | stat.S_IWUSR)
+
+class DeviationCheckMixin(object):
+
+	def check_deviation(self, new_sample):
+
+		if not self.success:
+			return
+
+		previous_sample = self.load_sample()
+		self.save_sample(new_sample)
+
+		try:
+			max_deviation = self.options.get_float(
+				self.OPTION_MAX_DEVIATION,
+				None
+			)
+		except TypeError as e:
+			return
+
+		if previous_sample is not None and new_sample is not None:
+			deviation = 100 * len(new_sample) / len(previous_sample) - 100
+		else:
+			deviation = 100
+		additional_message = "Deviation in size %f%% (max %f%%)" % (
+			deviation, max_deviation
+		)
+
+		debug(additional_message)
+
+		self.success &= deviation <= max_deviation
+		self.message += "\n\n" + additional_message

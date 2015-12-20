@@ -2,18 +2,23 @@
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from urllib.error import URLError
 from socket import error as SocketError
-from lib.strategies import (	BaseStrategy,
+from lib.strategies import (	BaseStrategy, DeviationCheckMixin,
 								KNOWLEDGE_ALIVE,
 								KNOWLEDGE_NONE )
 from lib.util import (	debug,
 						COLOR_LIGHT,
 						COLOR_STD )
 
-class Smtp(BaseStrategy):
+class Smtp(BaseStrategy, DeviationCheckMixin):
 
 	message = None
 	success = False
 
+	OPTION_MAX_DEVIATION = 'max_size_deviation_percentage'
+
+	_options_help = {
+		OPTION_MAX_DEVIATION: 'test fails if connect response deviates too much in size',
+	}
 
 	@classmethod
 	def get_help(cls):
@@ -34,27 +39,31 @@ class Smtp(BaseStrategy):
 
 		timeout = self.options.get_int('timeout')
 		if self.target.scheme.lower().endswith('s'):
-			smtp_cls = lambda netloc: SMTP_SSL(
-				netloc, None, None, None, None, timeout
+			client = SMTP_SSL(
+				None, None, None, None, None, timeout
 			)
 		else:
-			smtp_cls = lambda netloc: SMTP(
-				netloc, None, None, timeout
+			client = SMTP(
+				None, None, None, timeout
 			)
 
 		netloc = self.target.netloc
 		debug("opening smtp to " + netloc)
 		try:
-			smtp_connection = smtp_cls(netloc)
-			response = smtp_connection.noop()
-			message = "server said: " + response[1].decode()
-			success = response[0] == 250
+			response = client.connect(netloc)
+			response_status = response[0]
+			response_message = response[1]
+			client.quit()
+			message = "server said: " + response_message.decode()
+			success = response_status == 220
 		except (SocketError, SMTPException, ) as error:
 			message = str(error)
 			success = False
 
 		self.message = message
 		self.success = success
+
+		self.check_deviation(response_message)
 
 		debug("%sreached\n\n'%s'\n" % (
 			'NOT ' if not self.success else '',
