@@ -237,10 +237,14 @@ class DeviationCheckMixin(object):
 		except TypeError as e:
 			return
 
-		if not new_sample and not previous_sample:
+		if previous_sample is None or new_sample is None:
+			# too little information available -> optimistically assume no deviation
 			deviation = 0
-		elif not new_sample or not previous_sample:
-			deviation = 100
+		elif previous_sample == "":
+			if new_sample == "":
+				deviation = 0
+			else:
+				deviation = 100
 		else:
 			deviation = 100 * len(new_sample) / len(previous_sample) - 100
 
