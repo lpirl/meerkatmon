@@ -158,7 +158,17 @@ class BaseStrategy:
 		Returns a short, meaningful summary of the error/success.
 		Will never be mailed w/o information from get_mail_message.
 		"""
-		self.__class__._raise_subclass_error('get_mail_subject')
+		try:
+			return "%s checking '%s'!" % (
+				'Success' if self.success else 'Error',
+				self.target.geturl()
+			)
+		except AttributeError as e:
+			raise RuntimeError(
+				"Strategy was asked for check result prior calling do_check()" +
+				"(attribute self.target not found)."
+			)
+
 
 	def get_last_check_success(self):
 		"""

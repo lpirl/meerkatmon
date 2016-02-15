@@ -57,12 +57,6 @@ class Ping(BaseStrategy):
 			"".center(30, '-')
 		])
 
-	def get_mail_subject(self):
-		return "%s pinging '%s'!" % (
-			'Success' if self.success else 'Error',
-			self.target.netloc
-		)
-
 	def get_last_check_success(self):
 		try:
 			return self.success

@@ -76,17 +76,6 @@ class Smtp(BaseStrategy, DeviationCheckMixin):
 				"strategy asked for check result prior callind do_check()"
 			)
 
-	def get_mail_subject(self):
-		try:
-			return "%s getting '%s'!" % (
-				'Success' if self.success else 'Error',
-				self.target.netloc
-			)
-		except AttributeError:
-			raise RuntimeError(
-				"strategy asked for check result prior callind do_check()"
-			)
-
 	def get_last_check_success(self):
 		try:
 			return self.success
