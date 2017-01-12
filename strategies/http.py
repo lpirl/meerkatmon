@@ -15,11 +15,15 @@ class Http(BaseStrategy, DeviationCheckMixin):
 	OPTION_MAX_DEVIATION = 'max_size_deviation_percentage'
 	OPTION_STATUS_CODE = 'status_code'
 	OPTION_CHECK_SSL_TOO = 'check_SSL_too'
+	OPTION_PRESENT_IN_RESPONSE = 'present_in_response'
+	OPTION_ABSENT_IN_RESPONSE = 'absent_in_response'
 
 	_options_help = {
 		OPTION_MAX_DEVIATION: 'test fails if response deviates too much in size',
 		OPTION_STATUS_CODE: 'set an expected status code another than 200',
 		OPTION_CHECK_SSL_TOO: 'for HTTP targets, check target using HTTPS as well',
+		OPTION_PRESENT_IN_RESPONSE: 'test fails if given string not in response',
+		OPTION_ABSENT_IN_RESPONSE: 'test fails if given string in response',
 	}
 
 	message = None
@@ -82,6 +86,22 @@ class Http(BaseStrategy, DeviationCheckMixin):
 		self.success = success
 		self.response_str = response_str
 
+	def _check_response_content(self):
+		additional_message = ""
+
+		present = self.options.get_bytes(self.OPTION_PRESENT_IN_RESPONSE)
+		if present and present not in self.response_str:
+			additional_message += \
+				"\nunexpectedly not found in response: '%s'" % present.decode()
+
+		absent = self.options.get_bytes(self.OPTION_ABSENT_IN_RESPONSE)
+		if absent and absent in self.response_str:
+			additional_message += \
+				"\nunexpectedly found in response: '%s'" % absent.decode()
+
+		if additional_message:
+			self.message += additional_message
+			self.success = False
 
 	def do_check(self):
 		"""
@@ -94,6 +114,7 @@ class Http(BaseStrategy, DeviationCheckMixin):
 			''.join([COLOR_LIGHT, self.message, COLOR_STD])
 		))
 
+		self._check_response_content()
 		self.check_deviation(self.response_str)
 
 	def get_mail_message(self):

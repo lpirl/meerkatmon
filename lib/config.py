@@ -26,13 +26,13 @@ class OptionsDict(dict):
 
 	def get_int(self, *args, **kwargs):
 		"""
-		Returns requested value as int
+		Returns requested value as ``int``.
 		"""
 		return int(super(OptionsDict, self).get(*args, **kwargs))
 
 	def get_bool(self, *args, **kwargs):
 		"""
-		Returns requested value as int
+		Returns requested value as ``bool``.
 		"""
 		value = super(OptionsDict, self).get(*args, **kwargs)
 		if type(value) is str:
@@ -41,9 +41,16 @@ class OptionsDict(dict):
 
 	def get_float(self, *args, **kwargs):
 		"""
-		Returns requested value as int
+		Returns requested value as ``float``.
 		"""
 		return float(super(OptionsDict, self).get(*args, **kwargs))
+
+	def get_bytes(self, *args, **kwargs):
+		"""
+		Returns requested value as ``str``.
+		"""
+		out = super(OptionsDict, self).get(*args, **kwargs)
+		return out.encode() if out else None
 
 class ConfigDict(dict):
 	"""
