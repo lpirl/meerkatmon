@@ -242,9 +242,12 @@ class DeviationCheckMixin(object):
 		try:
 			max_deviation = self.options.get_float(
 				self.OPTION_MAX_DEVIATION,
-				None
+				-1
 			)
 		except TypeError as e:
+			return
+
+		if max_deviation < 0:
 			return
 
 		if previous_sample is None or new_sample is None:

@@ -19,7 +19,9 @@ class Http(BaseStrategy, DeviationCheckMixin):
 	OPTION_ABSENT_IN_RESPONSE = 'absent_in_response'
 
 	_options_help = {
-		OPTION_MAX_DEVIATION: 'test fails if response deviates too much in size',
+		OPTION_MAX_DEVIATION: ('test fails if response deviates too much in size ' +
+													'(absent configuration or negative values disable ' +
+													'this check)'),
 		OPTION_STATUS_CODE: 'set an expected status code another than 200',
 		OPTION_CHECK_SSL_TOO: 'for HTTP targets, check target using HTTPS as well',
 		OPTION_PRESENT_IN_RESPONSE: 'test fails if given string not in response',
