@@ -92,6 +92,8 @@ class Http(BaseStrategy, DeviationCheckMixin):
 	def _check_response_content(self):
 		additional_message = ""
 
+		assert self.response_str is not None
+
 		present = self.options.get_bytes(self.OPTION_PRESENT_IN_RESPONSE)
 		if present and present not in self.response_str:
 			additional_message += \
@@ -117,7 +119,8 @@ class Http(BaseStrategy, DeviationCheckMixin):
 			''.join([COLOR_LIGHT, self.message, COLOR_STD])
 		))
 
-		self._check_response_content()
+		if self.response_str is not None:
+			self._check_response_content()
 		self.check_deviation(self.response_str)
 
 	def get_mail_message(self):
