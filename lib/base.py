@@ -292,9 +292,13 @@ class MeerkatMon():
 			for key, value in headers.items():
 				msg[key] = value
 			debug("sending %s" % str(msg))
-			s.sendmail(
-				headers['From'],
-				[r[1] for r in getaddresses([headers['To']])],
-				msg.as_string()
-			)
+			try:
+				s.sendmail(
+					headers['From'],
+					[r[1] for r in getaddresses([headers['To']])],
+					msg.as_string()
+				)
+			except ConnectionRefusedError:
+				print("ERROR: could not send emails. "
+				      "Connection to localhost refused.")
 		s.quit()
