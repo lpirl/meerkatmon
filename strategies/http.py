@@ -73,7 +73,12 @@ class Http(BaseStrategy, DeviationCheckMixin):
 			except (HTTPError, SSLError, BadStatusLine) as e:
 				response = e
 
-			message = "server said: " + response.msg
+			response_message = getattr(response, "msg", None)
+			if response_message is None:
+				message = "no message from server"
+			else:
+				message = "message from server: '%s'" % response_message
+
 			success = response.code == self.options.get_int(
 				self.OPTION_STATUS_CODE, 200)
 
