@@ -9,7 +9,7 @@ from lib.strategies import (	BaseStrategy, DeviationCheckMixin,
 from lib.util import (	debug,
 						COLOR_LIGHT,
 						COLOR_STD )
-from http.client import BadStatusLine
+from http.client import BadStatusLine, HTTPResponse, RemoteDisconnected
 
 class Http(BaseStrategy, DeviationCheckMixin):
 
@@ -79,8 +79,11 @@ class Http(BaseStrategy, DeviationCheckMixin):
 			else:
 				message = "message from server: '%s'" % response_message
 
-			success = response.code == self.options.get_int(
-				self.OPTION_STATUS_CODE, 200)
+			response_code = getattr(response, "code", None)
+
+			success = response_code == self.options.get_int(
+				self.OPTION_STATUS_CODE, 200
+			)
 
 		except URLError as e:
 			success = False
