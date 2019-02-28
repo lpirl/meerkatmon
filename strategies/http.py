@@ -9,7 +9,8 @@ from lib.strategies import (	BaseStrategy, DeviationCheckMixin,
 from lib.util import (	debug,
 						COLOR_LIGHT,
 						COLOR_STD )
-from http.client import BadStatusLine, HTTPResponse, RemoteDisconnected
+from http.client import (	BadStatusLine, HTTPResponse, RemoteDisconnected,
+													IncompleteRead)
 
 class Http(BaseStrategy, DeviationCheckMixin):
 
@@ -70,7 +71,7 @@ class Http(BaseStrategy, DeviationCheckMixin):
 					timeout = self.options.get_int('timeout', 5)
 				)
 				response_str = response.read()
-			except (HTTPError, SSLError, BadStatusLine) as e:
+			except (HTTPError, SSLError, BadStatusLine, IncompleteRead) as e:
 				response = e
 
 			response_message = getattr(response, "msg", None)
