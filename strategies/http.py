@@ -2,7 +2,7 @@
 from urllib.request import Request, urlopen as urllib_urlopen
 from urllib.error import HTTPError, URLError
 from socket import error as socket_error
-from ssl import SSLError
+from ssl import SSLError, CertificateError
 from lib.strategies import (	BaseStrategy, DeviationCheckMixin,
 								KNOWLEDGE_ALIVE,
 								KNOWLEDGE_NONE )
@@ -71,7 +71,8 @@ class Http(BaseStrategy, DeviationCheckMixin):
 					timeout = self.options.get_int('timeout', 5)
 				)
 				response_str = response.read()
-			except (HTTPError, SSLError, BadStatusLine, IncompleteRead) as e:
+			except (HTTPError, SSLError, BadStatusLine, IncompleteRead,
+							CertificateError) as e:
 				response = e
 
 			response_message = getattr(response, "msg", None)
