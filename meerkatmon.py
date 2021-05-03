@@ -1,4 +1,4 @@
-#!python3 -OO
+#!/usr/bin/env -S python3 -OO
 """
 This moduly mainly provides CLI interface to class MeerkatMon.
 """
