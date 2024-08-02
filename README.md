@@ -1,3 +1,5 @@
+**unmaintained / deprecated**
+
 # MeerkatMon
 
 This script is intended to provide a simple way of monitoring different
